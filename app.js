@@ -182,12 +182,43 @@
       questionsHint: "答えは書かなくてだいじょうぶです。思い浮かべるだけでも。",
       downloadTitle: "記録のダウンロード",
       downloadCsv: "表計算ソフト用（CSV）",
-      downloadJson: "すべてのデータ（JSON）",
-      downloadNote: "ファイルはこの端末に保存されます。アプリから外部へ送信することはありません。やることやふりかえりの文章も入るので、渡す相手はご自身で選んでください。",
-      downloadTrouble: "LINE などのアプリの中で開いて付けた記録は、そのアプリの中にだけ保存されています。Safari や Chrome で開き直しても、そこには表示されません。うまくダウンロードできないときは、下の「すべてのデータを文字で表示」か、日ごとの「この日をコピー」を使ってください。",
+      downloadJson: "バックアップ（JSON）",
+      downloadNote: "ファイルはこの端末に保存されます。アプリから外部へ送信することはありません。やることやふりかえりの文章も入るので、渡す相手はご自身で選んでください。バックアップ（JSON）は、下の「バックアップの読み込み」で、別のブラウザやスマホに移せます。",
+      downloadTrouble: "LINE などのアプリの中で開いて付けた記録は、そのアプリの中にだけ保存されています。Safari や Chrome で開き直しても、そこには表示されません。うまくダウンロードできないときは、下の「バックアップを文字で表示」か、日ごとの「この日をコピー」を使ってください。",
       downloaded: "ダウンロードを始めました：{name}。保存されたかは、ブラウザのダウンロード一覧（iPhone は「ファイル」アプリの「ダウンロード」）で確かめてください。",
-      showAllText: "すべてのデータを文字で表示",
-      allTextHint: "下の文章を全部選んでコピーし、メモなどに貼って残してください（中身は「すべてのデータ（JSON）」と同じです）",
+      showAllText: "バックアップを文字で表示",
+      allTextHint: "下の文章を全部選んでコピーし、メモなどに貼って残してください（中身は「バックアップ（JSON）」と同じです）。「バックアップの読み込み」の「文字で貼り付けて読み込む」に貼ると、記録を戻せます。",
+      // バックアップの読み込み
+      importTitle: "バックアップの読み込み",
+      importLead: "別のブラウザやスマホでダウンロードした「バックアップ（JSON）」のファイルを選ぶと、その記録とふりかえりを、この端末に足します。今ある記録は消えません。",
+      importFile: "バックアップを読み込む",
+      importIphoneHint: "iPhone・iPad では、出てきた一覧の「ファイルを選択」から、「ダウンロード」にあるファイルを選んでください。",
+      importPasteTitle: "文字で貼り付けて読み込む",
+      importPasteHint: "ファイルを選べないときは、「バックアップを文字で表示」でコピーした文章を、最初から最後まで、ここに貼り付けてください。",
+      importPasteButton: "この文章を読み込む",
+      importPasteEmpty: "文章が入っていません。貼り付けてから押してください。",
+      importMadeOn: "{date}に作ったバックアップです。",
+      importContains: "このバックアップには、{items}が入っています。",
+      importEmpty: "このバックアップには、記録もふりかえりも入っていません。",
+      importSkipped: "形がくずれていて読み込めない記録が{n}件ありました。その分は足しません。",
+      importWillAdd: "このうち、この端末にまだない{items}を足します。今ある記録は、消したり書き換えたりしません。",
+      importNothingNew: "このバックアップの記録とふりかえりは、すべてこの端末に入っています。足すものはありません。",
+      importItemSessions: "記録{n}回",
+      importItemSessionsRange: "記録{n}回（{range}）",
+      dateRange: "{from}〜{to}",
+      importItemDays: "ふりかえり{n}日分",
+      importItemJoin: "と、",
+      importConfirm: "この端末に足す",
+      importCancel: "やめる",
+      importClose: "閉じる",
+      importDone: "{items}を足しました。日ごと・週ごとの記録で見られます。",
+      importErrorRead: "ファイルを読み込めませんでした。もう一度選んでください。",
+      importErrorTooLarge: "ファイルが大きすぎるため、読み込めませんでした。",
+      importErrorNotBackup: "このファイルは、このアプリのバックアップではないようです。「バックアップ（JSON）」でダウンロードしたファイル（coachingl-pomodoro_data_….json）を選んでください。",
+      importErrorCsv: "これは表計算ソフト用（CSV）のファイルです。読み込めるのは「バックアップ（JSON）」のファイル（coachingl-pomodoro_data_….json）です。",
+      importErrorText: "文章を読み取れませんでした。一部が欠けているかもしれません。「バックアップを文字で表示」の文章を、最初から最後まで全部コピーして、貼り付け直してください。",
+      importErrorNewer: "このバックアップは、新しい版のアプリで作られています。このページを再読み込みしてから、もう一度読み込んでください。",
+      importErrorSave: "この端末に保存できなかったため、読み込めませんでした。今ある記録は、そのままです。",
       copyTextLabel: "コピー用の文章",
       csvHeaders: ["日付", "曜日", "開始", "終了", "やること", "区切り", "集中した時間（分）", "予定（分）", "集中度", "気分", "記録ID"],
       copyHeader: "【{date}の記録】",
@@ -208,7 +239,7 @@
       hoursMinutes: "{h}時間{m}分",
       back: "もどる",
       clearAll: "すべての記録を消す",
-      clearConfirm: "すべての記録とふりかえりを消します。元には戻せません。先に「記録のダウンロード」で保存し、ファイルが端末にあることを確かめておくこともできます。よろしいですか？",
+      clearConfirm: "すべての記録とふりかえりを消します。この操作は取り消せません。先に「バックアップ（JSON）」をダウンロードしておけば、あとで「バックアップの読み込み」で戻せます。よろしいですか？",
       cleared: "記録を消しました",
 
       // 通知
@@ -405,6 +436,7 @@
       return state;
     }
 
+    /** 保存できたら true */
     function save() {
       try {
         window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -412,6 +444,7 @@
       } catch (e) {
         available = false;
       }
+      return available;
     }
 
     return {
@@ -450,6 +483,24 @@
       },
       clearSessions() {
         state.sessions = [];
+        save();
+      },
+      /**
+       * バックアップの記録をまとめて足す。保存できなければ元に戻して false
+       * （容量が足りないだけなので、「この環境では保存できません」の表示は出さない）。
+       */
+      addSessions(list) {
+        const prev = state.sessions;
+        const wasAvailable = available;
+        state.sessions = prev.concat(list);
+        if (save()) return true;
+        state.sessions = prev;
+        available = wasAvailable;
+        return false;
+      },
+      /** 足した記録を取り消す（ふりかえりを保存できなかったとき） */
+      removeSessions(ids) {
+        state.sessions = state.sessions.filter((s) => !ids.has(s.id));
         save();
       },
       setPromptDeck(remaining, last) {
@@ -550,6 +601,39 @@
           else delete days[key];
         }
         return available;
+      },
+      clean,
+      /**
+       * バックアップのふりかえりを足す。今の内容が空の欄にだけ書く（書いてある欄は書き換えない）。
+       * 最新の内容を読み直してから書く。保存できたら true（できなければ何も変えない）。
+       */
+      merge(add) {
+        const raw = readRaw() || {};
+        const rawDays = isObject(raw.days) ? Object.assign({}, raw.days) : {};
+        const now = Date.now();
+        Object.keys(add).forEach((key) => {
+          const day = Object.assign({}, isObject(rawDays[key]) ? rawDays[key] : {});
+          let changed = false;
+          NOTE_FIELDS.forEach((f) => {
+            if (add[key][f] && !(typeof day[f] === "string" && day[f])) {
+              day[f] = add[key][f];
+              changed = true;
+            }
+          });
+          if (changed) {
+            day.updatedAt = now;
+            rawDays[key] = day;
+          }
+        });
+        const next = Object.assign({}, raw, { version: Math.max(1, Number(raw.version) || 1), days: rawDays });
+        try {
+          window.localStorage.setItem(NOTES_KEY, JSON.stringify(next));
+        } catch (e) {
+          return false;
+        }
+        available = true;
+        days = clean(next);
+        return true;
       },
       clear() {
         days = {};
@@ -1278,6 +1362,15 @@
     el.allTextBox = $("#all-text-box");
     el.allText = $("#all-text");
     el.logStorageNotice = $("#log-storage-notice");
+    el.importFile = $("#import-file");
+    el.importBtn = $("#import-btn");
+    el.importPasteBox = $("#import-paste-box");
+    el.importText = $("#import-text");
+    el.importPreview = $("#import-preview");
+    el.importPreviewText = $("#import-preview-text");
+    el.importConfirm = $("#import-confirm");
+    el.importCancel = $("#import-cancel");
+    el.importStatus = $("#import-status");
   }
 
   /** 文言だけで決まる部品を組み立てる（起動時に1回） */
@@ -2168,6 +2261,8 @@
     recordsView.week = weekStartKey(recordsView.day);
     el.logStatus.textContent = "";
     el.downloadStatus.textContent = "";
+    closeImportPreview();
+    setImportStatus("", false);
     showView("log");
   }
 
@@ -2325,7 +2420,11 @@
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 60000);
     el.downloadStatus.textContent = t("downloaded", { name });
-    // ブラウザに「この記録は消さないで」と頼む（結果は画面に出さない）
+    requestPersist();
+  }
+
+  /** ブラウザに「この記録は消さないで」と頼む（結果は画面に出さない） */
+  function requestPersist() {
     if (!persistRequested && navigator.storage && navigator.storage.persist) {
       persistRequested = true;
       navigator.storage.persist().catch(() => {});
@@ -2352,6 +2451,251 @@
   function downloadJson() {
     flushNotes();
     downloadFile("coachingl-pomodoro_data_" + fileStamp() + ".json", "application/json;charset=utf-8", buildJson());
+  }
+
+  // ---- バックアップの読み込み（今の記録に足す形だけ。今ある記録は消さず、書き換えない） ----
+
+  const BACKUP_FORMAT = "coachingl-pomodoro-data"; // buildJson() と同じ
+  const BACKUP_FORMAT_VERSION = 1;
+  const IMPORT_MAX_SIZE = 10 * 1024 * 1024;
+  const IMPORT_TEXT_MAX = 200; // やることの文字数の上限（入力欄は80字。余裕をもたせる）
+  const DAY_MS = 24 * 60 * 60 * 1000;
+
+  let pendingImport = null; // 中身を確かめているバックアップ（「この端末に足す」を押すまで保存しない）
+
+  /** バックアップの1回分を、この版で使う項目だけに整える。使えないものは null */
+  function cleanBackupSession(s, now) {
+    if (!isObject(s)) return null;
+    const startedAt = s.startedAt;
+    if (typeof startedAt !== "number" || !isFinite(startedAt) || startedAt < Date.UTC(2000, 0, 1) || startedAt > now + DAY_MS) return null;
+    if (s.status !== "completed" && s.status !== "interrupted") return null;
+    const out = {
+      id: typeof s.id === "string" && s.id && s.id.length <= 64 ? s.id : "backup-" + Math.round(startedAt).toString(36),
+      startedAt,
+      endedAt: typeof s.endedAt === "number" && isFinite(s.endedAt) && s.endedAt >= startedAt ? s.endedAt : null,
+      plannedMinutes: Number.isInteger(s.plannedMinutes) && s.plannedMinutes > 0 && s.plannedMinutes <= 24 * 60 ? s.plannedMinutes : null,
+      intention: typeof s.intention === "string" ? s.intention.slice(0, IMPORT_TEXT_MAX) : "",
+      status: s.status,
+      focus: Number.isInteger(s.focus) && s.focus >= 1 && s.focus <= 5 ? s.focus : null,
+      feeling: CONFIG.feelings.indexOf(s.feeling) >= 0 ? s.feeling : null,
+    };
+    if (typeof s.focusedSeconds === "number" && isFinite(s.focusedSeconds) && s.focusedSeconds >= 0 && s.focusedSeconds <= DAY_MS / 1000) {
+      out.focusedSeconds = Math.round(s.focusedSeconds);
+    }
+    return out;
+  }
+
+  /**
+   * バックアップの文章を読んで、中身を確かめる（まだ保存しない）。
+   * { error: 文言のキー } か { backup: { madeOn, sessions, skipped, days } } を返す。
+   */
+  function parseBackup(text, pasted) {
+    const src = String(text || "").replace(/^﻿/, "").trim();
+    if (src.indexOf(csvCell(t("csvHeaders")[0], true) + ",") === 0) return { error: "importErrorCsv" };
+    let data = null;
+    try {
+      data = JSON.parse(src);
+    } catch (e) {
+      // メモアプリなどで前後に文字が付いても読めるように、最初の { から最後の } までを読み直す
+      const a = src.indexOf("{");
+      const b = src.lastIndexOf("}");
+      try {
+        data = a >= 0 && b > a ? JSON.parse(src.slice(a, b + 1)) : null;
+      } catch (e2) {
+        data = null;
+      }
+      if (!data) return { error: pasted ? "importErrorText" : "importErrorNotBackup" };
+    }
+    if (!isObject(data) || data.format !== BACKUP_FORMAT) return { error: "importErrorNotBackup" };
+    const version = Number(data.formatVersion);
+    if (!(version >= 1)) return { error: "importErrorNotBackup" };
+    if (version > BACKUP_FORMAT_VERSION) return { error: "importErrorNewer" };
+
+    const now = Date.now();
+    const rawSessions = Array.isArray(data.sessions) ? data.sessions : [];
+    const sessions = rawSessions.map((s) => cleanBackupSession(s, now)).filter(Boolean);
+    sessions.sort((x, y) => x.startedAt - y.startedAt);
+    const days = Notes.clean({ days: data.days });
+    Object.keys(days).forEach((k) => {
+      if (dateKey(keyToDate(k)) !== k) delete days[k]; // 2月30日のような、ない日付
+    });
+    const made = typeof data.exportedAt === "string" ? data.exportedAt.slice(0, 10) : "";
+    return {
+      backup: {
+        madeOn: /^\d{4}-\d{2}-\d{2}$/.test(made) && dateKey(keyToDate(made)) === made ? made : null,
+        sessions,
+        skipped: rawSessions.length - sessions.length,
+        days,
+      },
+    };
+  }
+
+  /** この端末にまだないものだけを選ぶ。同じ記録（同じ記録ID か同じ開始時刻）は1つにし、ふりかえりは空の欄にだけ足す */
+  function diffBackup(backup) {
+    const ids = new Set();
+    const starts = new Set();
+    Store.state.sessions.forEach((s) => {
+      if (typeof s.id === "string") ids.add(s.id);
+      if (typeof s.startedAt === "number") starts.add(s.startedAt);
+    });
+    const sessions = [];
+    backup.sessions.forEach((s) => {
+      if (ids.has(s.id) || starts.has(s.startedAt)) return;
+      ids.add(s.id);
+      starts.add(s.startedAt);
+      sessions.push(s);
+    });
+    const local = Notes.all();
+    const days = {};
+    Object.keys(backup.days).forEach((k) => {
+      const add = {};
+      NOTE_FIELDS.forEach((f) => {
+        if (backup.days[k][f] && !(local[k] && local[k][f])) add[f] = backup.days[k][f];
+      });
+      if (Object.keys(add).length) days[k] = add;
+    });
+    return { sessions, days, dayCount: Object.keys(days).length };
+  }
+
+  /** 「記録12回（9月1日〜10月6日）と、ふりかえり3日分」 */
+  function importItems(sessions, dayCount, withRange) {
+    const items = [];
+    if (sessions.length) {
+      if (withRange) {
+        const from = dateKey(sessions[0].startedAt);
+        const to = dateKey(sessions[sessions.length - 1].startedAt);
+        const range = from === to ? formatDateLabel(from) : t("dateRange", { from: formatDateLabel(from), to: formatDateLabel(to) });
+        items.push(t("importItemSessionsRange", { n: sessions.length, range }));
+      } else {
+        items.push(t("importItemSessions", { n: sessions.length }));
+      }
+    }
+    if (dayCount) items.push(t("importItemDays", { n: dayCount }));
+    return items.join(t("importItemJoin"));
+  }
+
+  function setImportStatus(text, isError) {
+    el.importStatus.textContent = text;
+    el.importStatus.classList.toggle("hint-warn", !!isError);
+  }
+
+  function closeImportPreview() {
+    pendingImport = null;
+    el.importPreview.hidden = true;
+  }
+
+  function showImportError(key) {
+    closeImportPreview();
+    setImportStatus(t(key), true);
+  }
+
+  /** 何を足すかを見せて、確かめてもらう */
+  function showImportPreview(backup) {
+    pendingImport = backup;
+    const diff = diffBackup(backup);
+    const total = backup.sessions.length;
+    const dayTotal = Object.keys(backup.days).length;
+    const hasNew = diff.sessions.length > 0 || diff.dayCount > 0;
+    const box = el.importPreviewText;
+    box.textContent = "";
+    setImportStatus("", false);
+    if (backup.madeOn) addParagraph(box, t("importMadeOn", { date: formatDateLabel(backup.madeOn) }));
+    if (total || dayTotal) addParagraph(box, t("importContains", { items: importItems(backup.sessions, dayTotal, true) }));
+    else addParagraph(box, t("importEmpty"));
+    if (backup.skipped) addParagraph(box, t("importSkipped", { n: backup.skipped }));
+    if (hasNew) addParagraph(box, t("importWillAdd", { items: importItems(diff.sessions, diff.dayCount, false) }), "import-will-add");
+    else if (total || dayTotal) addParagraph(box, t("importNothingNew"));
+    el.importConfirm.hidden = !hasNew;
+    el.importCancel.textContent = t(hasNew ? "importCancel" : "importClose");
+    el.importPreview.hidden = false;
+    el.importPreview.scrollIntoView({ block: "nearest" });
+    focusSoft(el.importPreview);
+  }
+
+  function readBackupText(text, pasted) {
+    const r = parseBackup(text, pasted);
+    if (r.error) showImportError(r.error);
+    else showImportPreview(r.backup);
+  }
+
+  function chooseImportFile() {
+    setImportStatus("", false);
+    el.importFile.click();
+  }
+
+  function onImportFileChosen() {
+    const file = el.importFile.files && el.importFile.files[0];
+    if (!file) return;
+    const done = () => {
+      el.importFile.value = ""; // 同じファイルをもう一度選べるように
+    };
+    if (file.size > IMPORT_MAX_SIZE) {
+      done();
+      showImportError("importErrorTooLarge");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      done();
+      readBackupText(String(reader.result || ""), false);
+    };
+    reader.onerror = () => {
+      done();
+      showImportError("importErrorRead");
+    };
+    reader.readAsText(file, "utf-8");
+  }
+
+  function importFromText() {
+    const text = el.importText.value;
+    if (!text.trim()) {
+      showImportError("importPasteEmpty");
+      el.importText.focus();
+      return;
+    }
+    if (text.length > IMPORT_MAX_SIZE) {
+      showImportError("importErrorTooLarge");
+      return;
+    }
+    readBackupText(text, true);
+  }
+
+  /** 「この端末に足す」。押した時点の内容と比べ直してから保存する（別のタブで変わっていても二重にしない） */
+  function confirmImport() {
+    if (!pendingImport) return;
+    flushNotes();
+    const diff = diffBackup(pendingImport);
+    if (!diff.sessions.length && !diff.dayCount) {
+      showImportPreview(pendingImport);
+      return;
+    }
+    // 書きかけのふりかえりを保存できていない間は、ふりかえりを足さない（書きかけが消えないように）
+    if (diff.dayCount && !Notes.available) {
+      showImportError("importErrorSave");
+      return;
+    }
+    if (diff.sessions.length && !Store.addSessions(diff.sessions)) {
+      showImportError("importErrorSave");
+      return;
+    }
+    if (diff.dayCount && !Notes.merge(diff.days)) {
+      if (diff.sessions.length) Store.removeSessions(new Set(diff.sessions.map((s) => s.id)));
+      showImportError("importErrorSave");
+      return;
+    }
+    closeImportPreview();
+    el.importText.value = "";
+    el.importPasteBox.open = false;
+    renderRecords();
+    setImportStatus(t("importDone", { items: importItems(diff.sessions, diff.dayCount, false) }), false);
+    focusSoft(el.importStatus);
+    requestPersist();
+  }
+
+  function cancelImport() {
+    closeImportPreview();
+    setImportStatus("", false);
+    focusSoft(el.importBtn);
   }
 
   function setBreakMinutes() {
@@ -2496,6 +2840,18 @@
         case "show-all-text":
           showAllText();
           break;
+        case "import-file":
+          chooseImportFile();
+          break;
+        case "import-text":
+          importFromText();
+          break;
+        case "import-confirm":
+          confirmImport();
+          break;
+        case "import-cancel":
+          cancelImport();
+          break;
         case "go-start":
           goStart();
           break;
@@ -2533,6 +2889,7 @@
 
     el.breakMinutes.addEventListener("change", setBreakMinutes);
     el.keepScreen.addEventListener("change", setKeepScreen);
+    el.importFile.addEventListener("change", onImportFileChosen);
     el.noteInputs.forEach((input) => {
       input.addEventListener("input", () => {
         input.dataset.dirty = "1";
