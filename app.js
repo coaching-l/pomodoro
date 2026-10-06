@@ -190,7 +190,7 @@
       allTextHint: "下の文章を全部選んでコピーし、メモなどに貼って残してください（中身は「バックアップ（JSON）」と同じです）。「バックアップの読み込み」の「文字で貼り付けて読み込む」に貼ると、記録を戻せます。",
       // バックアップの読み込み
       importTitle: "バックアップの読み込み",
-      importLead: "別のブラウザやスマホでダウンロードした「バックアップ（JSON）」のファイルを選ぶと、その記録とふりかえりを、この端末に足します。今ある記録は消えません。",
+      importLead: "ダウンロードしておいた「バックアップ（JSON）」のファイルを選ぶと、中身を確かめてから、その記録とふりかえりをこの端末に足せます。別のブラウザやスマホへの引っ越しや、記録が消えてしまったときに使えます。今ある記録は消えません。",
       importFile: "バックアップを読み込む",
       importIphoneHint: "iPhone・iPad では、出てきた一覧の「ファイルを選択」から、「ダウンロード」にあるファイルを選んでください。",
       importPasteTitle: "文字で貼り付けて読み込む",
@@ -203,6 +203,11 @@
       importSkipped: "形がくずれていて読み込めない記録が{n}件ありました。その分は足しません。",
       importWillAdd: "このうち、この端末にまだない{items}を足します。今ある記録は、消したり書き換えたりしません。",
       importNothingNew: "このバックアップの記録とふりかえりは、すべてこの端末に入っています。足すものはありません。",
+      importNothingElse: "ほかに足すものはありません。",
+      importNothingReadable: "読み込める記録とふりかえりは、ありませんでした。",
+      importKept: "ふりかえりのうち{n}日分は、この端末にもう書いてある欄と文がちがうため、その欄はこの端末の文のままにします。バックアップの文は足さないので、残したいときは下からコピーしてください。",
+      importKeptItem: "{date} {label}：{text}",
+      importRecounted: "この端末の記録が変わったため、足すものを数え直しました。もう一度確かめてください。",
       importItemSessions: "記録{n}回",
       importItemSessionsRange: "記録{n}回（{range}）",
       dateRange: "{from}〜{to}",
@@ -2248,6 +2253,9 @@
     if (!window.confirm(t("clearConfirm"))) return;
     Notes.clear();
     Store.clearSessions();
+    // 確かめ中のバックアップの数は、消す前の記録と比べたものなので閉じる
+    closeImportPreview();
+    setImportStatus("", false);
     recordsView.day = todayKey();
     recordsView.week = weekStartKey(recordsView.day);
     renderRecords();
@@ -2463,16 +2471,24 @@
 
   let pendingImport = null; // 中身を確かめているバックアップ（「この端末に足す」を押すまで保存しない）
 
-  /** バックアップの1回分を、この版で使う項目だけに整える。使えないものは null */
-  function cleanBackupSession(s, now) {
+  const BACKUP_EARLIEST_KEY = "2000-01-01"; // これより前の日付の記録・ふりかえりは足さない
+
+  /**
+   * バックアップの1回分を、この版で使う項目だけに整える。使えないものは null。
+   * 今日より後の日付の回は足さない（日ごとの画面で開けず、合計にだけ入ってしまうため）。
+   */
+  function cleanBackupSession(s, today) {
     if (!isObject(s)) return null;
     const startedAt = s.startedAt;
-    if (typeof startedAt !== "number" || !isFinite(startedAt) || startedAt < Date.UTC(2000, 0, 1) || startedAt > now + DAY_MS) return null;
+    if (typeof startedAt !== "number" || !isFinite(startedAt)) return null;
+    const day = dateKey(startedAt);
+    if (day < BACKUP_EARLIEST_KEY || day > today) return null;
     if (s.status !== "completed" && s.status !== "interrupted") return null;
     const out = {
       id: typeof s.id === "string" && s.id && s.id.length <= 64 ? s.id : "backup-" + Math.round(startedAt).toString(36),
       startedAt,
-      endedAt: typeof s.endedAt === "number" && isFinite(s.endedAt) && s.endedAt >= startedAt ? s.endedAt : null,
+      // 終了は開始から1日以内だけ（ありえない値で、合計が何億時間にもならないように）
+      endedAt: typeof s.endedAt === "number" && isFinite(s.endedAt) && s.endedAt >= startedAt && s.endedAt <= startedAt + DAY_MS ? s.endedAt : null,
       plannedMinutes: Number.isInteger(s.plannedMinutes) && s.plannedMinutes > 0 && s.plannedMinutes <= 24 * 60 ? s.plannedMinutes : null,
       intention: typeof s.intention === "string" ? s.intention.slice(0, IMPORT_TEXT_MAX) : "",
       status: s.status,
@@ -2490,7 +2506,14 @@
    * { error: 文言のキー } か { backup: { madeOn, sessions, skipped, days } } を返す。
    */
   function parseBackup(text, pasted) {
-    const src = String(text || "").replace(/^﻿/, "").trim();
+    const r = readBackupData(text, pasted);
+    // \u8cbc\u308a\u4ed8\u3051\u305f\u6587\u7ae0\u306b\u306f\u3001\u300c\u30d5\u30a1\u30a4\u30eb\u3092\u9078\u3093\u3067\u300d\u3067\u306f\u306a\u304f\u300c\u5168\u90e8\u30b3\u30d4\u30fc\u3057\u3066\u8cbc\u308a\u76f4\u3057\u3066\u300d\u3068\u6848\u5185\u3059\u308b
+    if (pasted && (r.error === "importErrorCsv" || r.error === "importErrorNotBackup")) return { error: "importErrorText" };
+    return r;
+  }
+
+  function readBackupData(text, pasted) {
+    const src = String(text || "").replace(/^\ufeff/, "").trim();
     if (src.indexOf(csvCell(t("csvHeaders")[0], true) + ",") === 0) return { error: "importErrorCsv" };
     let data = null;
     try {
@@ -2511,13 +2534,14 @@
     if (!(version >= 1)) return { error: "importErrorNotBackup" };
     if (version > BACKUP_FORMAT_VERSION) return { error: "importErrorNewer" };
 
-    const now = Date.now();
+    const today = todayKey();
     const rawSessions = Array.isArray(data.sessions) ? data.sessions : [];
-    const sessions = rawSessions.map((s) => cleanBackupSession(s, now)).filter(Boolean);
+    const sessions = rawSessions.map((s) => cleanBackupSession(s, today)).filter(Boolean);
     sessions.sort((x, y) => x.startedAt - y.startedAt);
     const days = Notes.clean({ days: data.days });
     Object.keys(days).forEach((k) => {
-      if (dateKey(keyToDate(k)) !== k) delete days[k]; // 2月30日のような、ない日付
+      // 2月30日のような、ない日付と、記録と同じ範囲の外（2000年より前・今日より後）は足さない
+      if (dateKey(keyToDate(k)) !== k || k < BACKUP_EARLIEST_KEY || k > today) delete days[k];
     });
     const made = typeof data.exportedAt === "string" ? data.exportedAt.slice(0, 10) : "";
     return {
@@ -2547,14 +2571,30 @@
     });
     const local = Notes.all();
     const days = {};
-    Object.keys(backup.days).forEach((k) => {
-      const add = {};
-      NOTE_FIELDS.forEach((f) => {
-        if (backup.days[k][f] && !(local[k] && local[k][f])) add[f] = backup.days[k][f];
+    const kept = []; // この端末にもう書いてあり、文がちがうため足さない欄（黙って捨てないよう、画面で見せる）
+    Object.keys(backup.days)
+      .sort()
+      .forEach((k) => {
+        const add = {};
+        NOTE_FIELDS.forEach((f) => {
+          const text = backup.days[k][f];
+          if (!text) return;
+          const mine = local[k] && local[k][f];
+          if (!mine) add[f] = text;
+          else if (mine !== text) kept.push({ key: k, field: f, text });
+        });
+        if (Object.keys(add).length) days[k] = add;
       });
-      if (Object.keys(add).length) days[k] = add;
-    });
-    return { sessions, days, dayCount: Object.keys(days).length };
+    const keptDays = new Set(kept.map((c) => c.key)).size;
+    return { sessions, days, dayCount: Object.keys(days).length, kept, keptDays };
+  }
+
+  /** 見せた内容と保存する内容が同じかを比べるための目印 */
+  function diffSignature(diff) {
+    return JSON.stringify([
+      diff.sessions.map((s) => s.id),
+      Object.keys(diff.days).map((k) => k + ":" + Object.keys(diff.days[k]).join(",")),
+    ]);
   }
 
   /** 「記録12回（9月1日〜10月6日）と、ふりかえり3日分」 */
@@ -2584,27 +2624,42 @@
     el.importPreview.hidden = true;
   }
 
+  /**
+   * 読み込めなかったことを伝える。文が画面の外に出ないように見える位置まで動かし、
+   * 確認の欄の中のボタンにフォーカスがあったときは（欄ごと閉じるので）文へ移す。
+   */
   function showImportError(key) {
+    const hadFocus = el.importPreview.contains(document.activeElement);
     closeImportPreview();
     setImportStatus(t(key), true);
+    el.importStatus.scrollIntoView({ block: "nearest" });
+    if (hadFocus) focusSoft(el.importStatus);
   }
 
-  /** 何を足すかを見せて、確かめてもらう */
-  function showImportPreview(backup) {
-    pendingImport = backup;
+  /** 何を足すかを見せて、確かめてもらう。recounted：押したときに数が変わっていた */
+  function showImportPreview(backup, recounted) {
     const diff = diffBackup(backup);
+    pendingImport = { backup, shown: diffSignature(diff) };
     const total = backup.sessions.length;
     const dayTotal = Object.keys(backup.days).length;
     const hasNew = diff.sessions.length > 0 || diff.dayCount > 0;
     const box = el.importPreviewText;
     box.textContent = "";
     setImportStatus("", false);
+    if (recounted) addParagraph(box, t("importRecounted"), "import-will-add");
     if (backup.madeOn) addParagraph(box, t("importMadeOn", { date: formatDateLabel(backup.madeOn) }));
     if (total || dayTotal) addParagraph(box, t("importContains", { items: importItems(backup.sessions, dayTotal, true) }));
-    else addParagraph(box, t("importEmpty"));
     if (backup.skipped) addParagraph(box, t("importSkipped", { n: backup.skipped }));
+    if (!total && !dayTotal) addParagraph(box, t(backup.skipped ? "importNothingReadable" : "importEmpty"));
     if (hasNew) addParagraph(box, t("importWillAdd", { items: importItems(diff.sessions, diff.dayCount, false) }), "import-will-add");
-    else if (total || dayTotal) addParagraph(box, t("importNothingNew"));
+    if (diff.keptDays) {
+      addParagraph(box, t("importKept", { n: diff.keptDays }));
+      const labels = { good: t("copyNoteGood"), next: t("copyNoteNext"), moved: t("copyNoteMoved") };
+      diff.kept.forEach((c) => {
+        addParagraph(box, t("importKeptItem", { date: formatDateLabel(c.key), label: labels[c.field], text: c.text }), "import-kept-item");
+      });
+    }
+    if (!hasNew && (total || dayTotal)) addParagraph(box, t(diff.keptDays ? "importNothingElse" : "importNothingNew"));
     el.importConfirm.hidden = !hasNew;
     el.importCancel.textContent = t(hasNew ? "importCancel" : "importClose");
     el.importPreview.hidden = false;
@@ -2660,15 +2715,20 @@
     readBackupText(text, true);
   }
 
-  /** 「この端末に足す」。押した時点の内容と比べ直してから保存する（別のタブで変わっていても二重にしない） */
+  /**
+   * 「この端末に足す」。押した時点の内容と比べ直し、見せた内容と変わっていたら保存せずに見せ直す
+   * （別のタブで記録が増えたり、消したりしても、確かめていないものを足さない）。
+   */
   function confirmImport() {
     if (!pendingImport) return;
     flushNotes();
-    const diff = diffBackup(pendingImport);
-    if (!diff.sessions.length && !diff.dayCount) {
-      showImportPreview(pendingImport);
+    const backup = pendingImport.backup;
+    const diff = diffBackup(backup);
+    if (diffSignature(diff) !== pendingImport.shown) {
+      showImportPreview(backup, true);
       return;
     }
+    if (!diff.sessions.length && !diff.dayCount) return;
     // 書きかけのふりかえりを保存できていない間は、ふりかえりを足さない（書きかけが消えないように）
     if (diff.dayCount && !Notes.available) {
       showImportError("importErrorSave");

@@ -1013,6 +1013,14 @@ legend.field-label {
   font-weight: 600;
 }
 
+.import-kept-item {
+  padding-left: 10px;
+  border-left: 2px solid var(--line);
+  font-size: 0.875rem;
+  white-space: pre-line; /* ふりかえりの改行をそのまま */
+  user-select: text;
+}
+
 .summary-line {
   font-size: 0.9375rem;
   word-break: auto-phrase;
