@@ -126,7 +126,7 @@
         rushed: "あせり",
       },
 
-      // 休憩中の促し（ランダムに1つ表示）
+      // 休憩中の促し（全部を一巡するまで同じ文が出ないように、1つずつ表示）
       breakPrompts: [
         "立ち上がって、ぐーっと伸びをしてみましょう",
         "水を一杯、ゆっくり飲みましょう",
@@ -206,6 +206,8 @@
         settings: { workMinutes: CONFIG.workMinutes, breakMinutes: CONFIG.breakMinutes },
         sessions: [],
         current: null,
+        // 休憩の促しの「山札」。remaining が空になったら切り直す
+        promptDeck: { remaining: [], last: null },
       };
     }
 
@@ -218,6 +220,12 @@
         settings: Object.assign(base.settings, isObject(data.settings) ? data.settings : {}),
         sessions: Array.isArray(data.sessions) ? data.sessions.filter(isObject) : [],
         current: isObject(data.current) ? data.current : null,
+        promptDeck: isObject(data.promptDeck)
+          ? {
+              remaining: Array.isArray(data.promptDeck.remaining) ? data.promptDeck.remaining : [],
+              last: Number.isInteger(data.promptDeck.last) ? data.promptDeck.last : null,
+            }
+          : base.promptDeck,
       };
     }
 
@@ -287,6 +295,10 @@
         state.sessions = [];
         save();
       },
+      setPromptDeck(remaining, last) {
+        state.promptDeck = { remaining, last };
+        save();
+      },
     };
   })();
 
@@ -296,6 +308,36 @@
 
   function newId() {
     return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+  }
+
+  function shuffle(list) {
+    const a = list.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = a[i];
+      a[i] = a[j];
+      a[j] = tmp;
+    }
+    return a;
+  }
+
+  /**
+   * 休憩の促しを「山札」から1枚引く。
+   * トランプのように切った順に出すので、全部を一巡するまで同じ文は出ない。
+   * 切り直した直後に、前回と同じ文が続かないようにもしている。
+   */
+  function drawPromptIndex(count) {
+    const deck = Store.state.promptDeck;
+    let remaining = deck.remaining.filter((i) => Number.isInteger(i) && i >= 0 && i < count);
+    if (remaining.length === 0) {
+      remaining = shuffle(Array.from({ length: count }, (_, i) => i));
+      if (remaining.length > 1 && remaining[0] === deck.last) {
+        remaining.push(remaining.shift());
+      }
+    }
+    const index = remaining.shift();
+    Store.setPromptDeck(remaining, index);
+    return index;
   }
 
   // ==========================================================================
@@ -910,7 +952,7 @@
       plannedMinutes: minutes,
       endAt: now + minutes * 60000,
       remainingMs: null,
-      promptIndex: Math.floor(Math.random() * t("breakPrompts").length),
+      promptIndex: drawPromptIndex(t("breakPrompts").length),
     });
     showView("break");
     startTicking();
