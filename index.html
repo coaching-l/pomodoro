@@ -176,16 +176,18 @@
       <section class="view" data-view="log" hidden>
         <h2 class="lead" tabindex="-1" data-i18n="logTitle"></h2>
 
-        <div class="tabs" role="tablist" data-i18n-aria-label="logTabsLabel">
-          <button type="button" class="tab" role="tab" id="tab-day" aria-controls="panel-day" aria-selected="true" data-action="log-tab" data-tab="day" data-i18n="tabDay"></button>
-          <button type="button" class="tab" role="tab" id="tab-week" aria-controls="panel-week" aria-selected="false" data-action="log-tab" data-tab="week" data-i18n="tabWeek"></button>
+        <p class="notice notice-muted" id="log-storage-notice" data-i18n="storageUnavailable" hidden></p>
+
+        <div class="tabs" role="group" data-i18n-aria-label="logTabsLabel">
+          <button type="button" class="tab" id="tab-day" aria-pressed="true" data-action="log-tab" data-tab="day" data-i18n="tabDay"></button>
+          <button type="button" class="tab" id="tab-week" aria-pressed="false" data-action="log-tab" data-tab="week" data-i18n="tabWeek"></button>
         </div>
 
         <!-- 日ごと -->
-        <div class="panel" role="tabpanel" id="panel-day" aria-labelledby="tab-day">
+        <div class="panel" id="panel-day">
           <div class="period-nav">
             <button type="button" class="nav-btn" id="day-prev" data-action="day-prev" data-i18n="prevDay"></button>
-            <h3 class="period-title" id="day-title" aria-live="polite"></h3>
+            <h3 class="period-title" id="day-title" tabindex="-1" aria-live="polite"></h3>
             <button type="button" class="nav-btn" id="day-next" data-action="day-next" data-i18n="nextDay"></button>
           </div>
           <button type="button" class="link-btn" id="day-today" data-action="day-today" data-i18n="toToday" hidden></button>
@@ -209,16 +211,16 @@
           <button type="button" class="btn btn-secondary btn-block" data-action="copy-day" data-i18n="copyDay"></button>
           <p class="hint hint-center" id="copy-status" role="status"></p>
           <div class="copy-fallback" id="copy-fallback" hidden>
-            <p class="hint" data-i18n="copyFallbackHint"></p>
-            <textarea class="text-input" id="copy-text" rows="8" readonly></textarea>
+            <p class="hint" id="copy-fallback-hint" data-i18n="copyFallbackHint"></p>
+            <textarea class="text-input" id="copy-text" rows="8" readonly aria-labelledby="copy-fallback-hint"></textarea>
           </div>
         </div>
 
         <!-- 週ごと -->
-        <div class="panel" role="tabpanel" id="panel-week" aria-labelledby="tab-week" hidden>
+        <div class="panel" id="panel-week" hidden>
           <div class="period-nav">
             <button type="button" class="nav-btn" id="week-prev" data-action="week-prev" data-i18n="prevWeek"></button>
-            <h3 class="period-title" id="week-title" aria-live="polite"></h3>
+            <h3 class="period-title" id="week-title" tabindex="-1" aria-live="polite"></h3>
             <button type="button" class="nav-btn" id="week-next" data-action="week-next" data-i18n="nextWeek"></button>
           </div>
           <button type="button" class="link-btn" id="week-today" data-action="week-today" data-i18n="toThisWeek" hidden></button>
@@ -233,7 +235,7 @@
           <ol class="day-rows" id="day-rows"></ol>
 
           <figure class="chart-box">
-            <figcaption class="chart-title" data-i18n="chartBandsTitle"></figcaption>
+            <figcaption class="chart-title" id="bands-title" data-i18n="chartBandsTitle"></figcaption>
             <p class="chart-note" id="bands-note"></p>
             <div class="chart" id="chart-bands"></div>
             <p class="chart-legend" id="legend-bands"></p>
@@ -271,6 +273,11 @@
           <p class="hint" data-i18n="downloadNote"></p>
           <p class="hint" data-i18n="downloadTrouble"></p>
           <p class="hint" id="download-status" role="status"></p>
+          <button type="button" class="btn btn-ghost btn-block btn-small" data-action="show-all-text" data-i18n="showAllText"></button>
+          <div class="copy-fallback" id="all-text-box" hidden>
+            <p class="hint" id="all-text-hint" data-i18n="allTextHint"></p>
+            <textarea class="text-input" id="all-text" rows="8" readonly aria-labelledby="all-text-hint"></textarea>
+          </div>
         </section>
 
         <p class="hint hint-center" id="log-status" role="status"></p>

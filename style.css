@@ -879,7 +879,7 @@ legend.field-label {
   touch-action: manipulation;
 }
 
-.tab[aria-selected="true"] {
+.tab[aria-pressed="true"] {
   background: var(--accent);
   color: var(--accent-contrast);
 }
@@ -919,7 +919,7 @@ legend.field-label {
   touch-action: manipulation;
 }
 
-.nav-btn:disabled {
+.nav-btn[aria-disabled="true"] {
   opacity: 0.35;
   cursor: default;
 }
@@ -1079,8 +1079,14 @@ legend.field-label {
   font-weight: 700;
 }
 
-.band-row.is-few {
+/* 記録の少ない時間帯は、棒だけを薄く（文字は読める濃さのまま） */
+.band-row.is-few .seg,
+.band-row.is-few .chart-track {
   opacity: 0.45;
+}
+
+.chart-few {
+  font-size: 11px;
 }
 
 .chart-legend {
@@ -1217,4 +1223,5 @@ legend.field-label {
 
 .week-note-line {
   font-size: 0.9375rem;
+  white-space: pre-line; /* 本人が書いた改行をそのまま */
 }

@@ -133,6 +133,7 @@
       noteNext: "次に試したいこと",
       noteMoved: "気持ちが動いたこと（よいことでも、そうでなくても）",
       noteSaved: "保存しました",
+      noteNotSaved: "この端末には保存できませんでした。「この日をコピー」で控えておけます",
       copyDay: "この日をコピー",
       copied: "コピーしました。LINE などに貼り付けられます",
       copyFallbackHint: "下の文章を長押し（または選択）してコピーしてください",
@@ -148,21 +149,30 @@
       totalSinceStart: "はじめてからの合計：{count}回・{duration}",
       chartDailyTitle: "日ごとの集中の時間",
       chartBandsTitle: "集中しやすい時間帯（ここ4週間）",
+      chartBandsTitlePast: "集中しやすい時間帯（{from}〜{to}の4週間）",
       legendFocus: "濃さは集中度（散りがち 1 → 5 没頭できた）。灰色は未記入",
       minutesShort: "{n}分",
-      dayRow: "{date}　{count}回・{minutes}分",
+      dayRow: "{date}　{count}回・{duration}",
       dayRowEmpty: "{date}　—",
       bandsNotEnough: "記録がたまると、ここに集中しやすい時間帯が見えてきます",
+      bandsNotEnoughPast: "この4週間は、集中度つきの記録が少ないため、図は出していません",
       bandsFew: "記録がまだ少ない",
       bandsObserve: "ここ4週間では、{bands}でした",
+      bandsObservePast: "この4週間では、{bands}でした",
       bandsObserveItem: "{band}は{total}回のうち{high}回が集中度4〜5",
       bandsObserveJoin: "、",
       bandsMost: "ここ4週間は、{band}に始めた回がいちばん多くありました（{n}回）",
+      bandsMostPast: "この4週間は、{band}に始めた回がいちばん多くありました（{n}回）",
+      bandsMostTie: "ここ4週間は、{band}に始めた回がいちばん多くありました（それぞれ{n}回）",
+      bandsMostTiePast: "この4週間は、{band}に始めた回がいちばん多くありました（それぞれ{n}回）",
+      bandsAllFew: "時間帯ごとに見ると、まだどれも記録が少ないため、傾向の文は出していません",
       bandLabels: ["早朝（5〜8時）", "午前（8〜12時）", "昼（12〜14時）", "午後（14〜18時）", "夕方〜夜（18〜22時）", "深夜（22〜5時）"],
       showNumbers: "数字で見る",
       tableBand: "時間帯",
       tableCount: "回数",
       tableUnrated: "未記入",
+      tableCaption: "時間帯ごとの回数と、集中度の内訳",
+      tableFocusPrefix: "集中度",
       flowTitle: "没頭できた時間",
       flowMeta: "{date} {time}・{minutes}分",
       weekNotesTitle: "この週のふりかえり",
@@ -174,8 +184,11 @@
       downloadCsv: "表計算ソフト用（CSV）",
       downloadJson: "すべてのデータ（JSON）",
       downloadNote: "ファイルはこの端末に保存されます。アプリから外部へ送信することはありません。やることやふりかえりの文章も入るので、渡す相手はご自身で選んでください。",
-      downloadTrouble: "うまくダウンロードできないとき（LINE の中で開いたときなど）は、Safari や Chrome で開き直すか、日ごとの「この日をコピー」を使ってください。",
-      downloaded: "ダウンロードしました：{name}",
+      downloadTrouble: "LINE などのアプリの中で開いて付けた記録は、そのアプリの中にだけ保存されています。Safari や Chrome で開き直しても、そこには表示されません。うまくダウンロードできないときは、下の「すべてのデータを文字で表示」か、日ごとの「この日をコピー」を使ってください。",
+      downloaded: "ダウンロードを始めました：{name}。保存されたかは、ブラウザのダウンロード一覧（iPhone は「ファイル」アプリの「ダウンロード」）で確かめてください。",
+      showAllText: "すべてのデータを文字で表示",
+      allTextHint: "下の文章を全部選んでコピーし、メモなどに貼って残してください（中身は「すべてのデータ（JSON）」と同じです）",
+      copyTextLabel: "コピー用の文章",
       csvHeaders: ["日付", "曜日", "開始", "終了", "やること", "区切り", "集中した時間（分）", "予定（分）", "集中度", "気分", "記録ID"],
       copyHeader: "【{date}の記録】",
       copyFocus: "集中度{n}",
@@ -195,7 +208,7 @@
       hoursMinutes: "{h}時間{m}分",
       back: "もどる",
       clearAll: "すべての記録を消す",
-      clearConfirm: "すべての記録とふりかえりを消します。元には戻せません。先に「記録のダウンロード」で保存しておくこともできます。よろしいですか？",
+      clearConfirm: "すべての記録とふりかえりを消します。元には戻せません。先に「記録のダウンロード」で保存し、ファイルが端末にあることを確かめておくこともできます。よろしいですか？",
       cleared: "記録を消しました",
 
       // 通知
@@ -346,6 +359,8 @@
     /**
      * 保存データを現在の形式にそろえる（形式を変えるときはここに移行処理を足す）。
      * 知らない項目は捨てずに残す（新しい版で足した項目を、古い版で消してしまわないように）。
+     * 古い版が保存し直すと version は 1 に戻るので、移行処理は何度かけても同じ結果になるように作る。
+     * 形を大きく変えるときは、新しいキー（…-v2）を使う。
      */
     function migrate(data) {
       const base = blank();
@@ -356,10 +371,10 @@
         sessions: Array.isArray(data.sessions) ? data.sessions.filter(isObject) : [],
         current: isObject(data.current) ? data.current : null,
         promptDeck: isObject(data.promptDeck)
-          ? {
+          ? Object.assign({}, data.promptDeck, {
               remaining: Array.isArray(data.promptDeck.remaining) ? data.promptDeck.remaining : [],
               last: Number.isInteger(data.promptDeck.last) ? data.promptDeck.last : null,
-            }
+            })
           : base.promptDeck,
       });
     }
@@ -380,6 +395,13 @@
         }
       }
       state = migrate(data);
+      // 読めても書けない環境（容量の上限、保存を止めたブラウザなど）があるので、小さく書いて確かめる
+      try {
+        window.localStorage.setItem(STORAGE_KEY + "-probe", "1");
+        window.localStorage.removeItem(STORAGE_KEY + "-probe");
+      } catch (e) {
+        available = false;
+      }
       return state;
     }
 
@@ -447,64 +469,93 @@
 
   const Notes = (function () {
     let days = {};
+    let available = true; // 直近の保存が成功したか
 
-    function load() {
-      days = {};
+    function readRaw() {
       try {
         const data = JSON.parse(window.localStorage.getItem(NOTES_KEY) || "null");
-        if (isObject(data) && isObject(data.days)) {
-          Object.keys(data.days).forEach((key) => {
-            const d = data.days[key];
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || !isObject(d)) return;
-            const clean = {};
-            NOTE_FIELDS.forEach((f) => {
-              if (typeof d[f] === "string" && d[f]) clean[f] = d[f].slice(0, CONFIG.noteMaxLength);
-            });
-            if (Object.keys(clean).length) {
-              clean.updatedAt = Number(d.updatedAt) || 0;
-              days[key] = clean;
-            }
-          });
-        }
+        return isObject(data) ? data : null;
       } catch (e) {
-        days = {};
+        return null;
       }
     }
 
-    function save() {
-      try {
-        window.localStorage.setItem(NOTES_KEY, JSON.stringify({ version: 1, days }));
-      } catch (e) {
-        /* 保存できなくても画面は続ける */
-      }
+    /** 保存されている形から、画面で使う部分（good/next/moved）だけを取り出す */
+    function clean(raw) {
+      const out = {};
+      if (!raw || !isObject(raw.days)) return out;
+      Object.keys(raw.days).forEach((key) => {
+        const d = raw.days[key];
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || !isObject(d)) return;
+        const c = {};
+        NOTE_FIELDS.forEach((f) => {
+          if (typeof d[f] === "string" && d[f]) c[f] = d[f].slice(0, CONFIG.noteMaxLength);
+        });
+        if (Object.keys(c).length) {
+          c.updatedAt = Number(d.updatedAt) || 0;
+          out[key] = c;
+        }
+      });
+      return out;
+    }
+
+    function load() {
+      // 保存に失敗している間は、まだ保存できていない書きかけを消さないよう、読み直さない
+      if (!available) return;
+      days = clean(readRaw());
     }
 
     return {
       load,
+      get available() {
+        return available;
+      },
       get(key) {
         return days[key] || null;
       },
       all() {
         return days;
       },
+      /**
+       * 1つの欄を保存する。保存の直前に最新の内容を読み直し、変えた欄だけを書き換える
+       * （新しい版で足した項目や、別のタブが書いたほかの日を消さないように）。保存できたら true。
+       */
       set(key, field, value) {
         const text = String(value || "").slice(0, CONFIG.noteMaxLength);
-        const d = Object.assign({}, days[key]);
-        if (text.trim()) d[field] = text;
-        else delete d[field];
-        const has = NOTE_FIELDS.some((f) => d[f]);
-        if (has) {
-          d.updatedAt = Date.now();
-          days[key] = d;
+        const raw = readRaw() || {};
+        const rawDays = isObject(raw.days) ? Object.assign({}, raw.days) : {};
+        const day = Object.assign({}, rawDays[key]);
+        if (text.trim()) day[field] = text;
+        else delete day[field];
+        const hasText = NOTE_FIELDS.some((f) => day[f]);
+        const others = Object.keys(day).filter((k) => NOTE_FIELDS.indexOf(k) < 0 && k !== "updatedAt");
+        if (hasText || others.length) {
+          day.updatedAt = Date.now();
+          rawDays[key] = day;
         } else {
-          delete days[key];
+          delete rawDays[key];
         }
-        save();
+        const next = Object.assign({}, raw, { version: Math.max(1, Number(raw.version) || 1), days: rawDays });
+        try {
+          window.localStorage.setItem(NOTES_KEY, JSON.stringify(next));
+          available = true;
+          days = clean(next);
+        } catch (e) {
+          available = false;
+          // 保存できなくても、この画面の中では書いた内容を残す（「この日をコピー」で控えられるように）
+          const d = Object.assign({}, days[key]);
+          if (text.trim()) d[field] = text;
+          else delete d[field];
+          if (NOTE_FIELDS.some((f) => d[f])) days[key] = d;
+          else delete days[key];
+        }
+        return available;
       },
       clear() {
         days = {};
         try {
           window.localStorage.removeItem(NOTES_KEY);
+          available = true;
         } catch (e) {
           /* 何もしない */
         }
@@ -614,6 +665,13 @@
     const h = Math.floor(totalMinutes / 60);
     const m = totalMinutes % 60;
     return h > 0 ? t("hoursMinutes", { h, m }) : t("minutes", { n: m });
+  }
+
+  /** グラフや一覧の分数（切り捨て。0より大きく1分未満なら「1分未満」）。まとめの formatDuration とそろえる */
+  function formatMinutesTotal(seconds) {
+    const s = Math.max(0, Math.round(seconds));
+    if (s > 0 && s < 60) return t("lessThanMinute");
+    return t("minutesShort", { n: Math.floor(s / 60) });
   }
 
   /** 1回分の時間。短くても「0分」ではなく「1分未満」と表示する */
@@ -1048,9 +1106,15 @@
   }
 
   /** いちばん古い記録の日（記録がなければ今日） */
+  /** いちばん古い記録またはふりかえりの日（どちらもなければ今日。今日より後にはしない） */
   function earliestKey() {
+    const today = todayKey();
     const list = validSessions();
-    return list.length ? dateKey(list[0].startedAt) : todayKey();
+    let min = list.length ? dateKey(list[0].startedAt) : today;
+    Object.keys(Notes.all()).forEach((k) => {
+      if (k < min && k <= today && dateKey(keyToDate(k)) === k) min = k;
+    });
+    return min < today ? min : today;
   }
 
   /** 同じ日に、中断した回のあとに別の回を始めた数（中断1つにつき1） */
@@ -1210,6 +1274,10 @@
     el.weekNotesSection = $("#week-notes-section");
     el.weekNotes = $("#week-notes");
     el.downloadStatus = $("#download-status");
+    el.bandsTitle = $("#bands-title");
+    el.allTextBox = $("#all-text-box");
+    el.allText = $("#all-text");
+    el.logStorageNotice = $("#log-storage-notice");
   }
 
   /** 文言だけで決まる部品を組み立てる（起動時に1回） */
@@ -1394,12 +1462,50 @@
   /** 記録画面で見ている場所 */
   const recordsView = { tab: "day", day: null, week: null };
 
+  let recordsDrawnFor = null; // 記録画面を描いたときの「今日」
+  let midnightTimer = null;
+
+  /**
+   * 記録画面を開いたまま日付が変わったとき、「今日」「今週」を見ていたなら新しい今日へ動かす。
+   * 書きかけのふりかえりは、書き始めた日に保存してから動かす。
+   */
+  function refreshRecordsIfDayChanged() {
+    if (currentView !== "log" || !recordsDrawnFor) return;
+    const now = todayKey();
+    if (now === recordsDrawnFor) return;
+    const prev = recordsDrawnFor;
+    flushNotes();
+    const typing = el.noteInputs.indexOf(document.activeElement) >= 0;
+    if (!typing && recordsView.day === prev) recordsView.day = now;
+    if (recordsView.week === weekStartKey(prev)) recordsView.week = weekStartKey(now);
+    renderRecords();
+  }
+
+  /** 次の0時の少しあとに、記録画面を新しい日付で描き直す（画面を開いたままの夜をまたぐとき） */
+  function scheduleMidnightRefresh() {
+    clearTimeout(midnightTimer);
+    const now = new Date();
+    const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5);
+    midnightTimer = setTimeout(() => {
+      refreshRecordsIfDayChanged();
+      scheduleMidnightRefresh();
+    }, next.getTime() - now.getTime());
+  }
+
+  /** 保存できない環境では、記録画面にも注意書きを出す */
+  function renderStorageNotice() {
+    if (!el.logStorageNotice) return;
+    el.logStorageNotice.hidden = Store.available && Notes.available;
+  }
+
   function renderRecords() {
+    recordsDrawnFor = todayKey();
+    renderStorageNotice();
     if (!recordsView.day) recordsView.day = todayKey();
     if (!recordsView.week) recordsView.week = weekStartKey(recordsView.day);
     const isDay = recordsView.tab === "day";
-    el.tabDay.setAttribute("aria-selected", String(isDay));
-    el.tabWeek.setAttribute("aria-selected", String(!isDay));
+    el.tabDay.setAttribute("aria-pressed", String(isDay));
+    el.tabWeek.setAttribute("aria-pressed", String(!isDay));
     el.panelDay.hidden = !isDay;
     el.panelWeek.hidden = isDay;
     if (isDay) renderDay();
@@ -1412,8 +1518,8 @@
     const key = recordsView.day;
     const today = todayKey();
     el.dayTitle.textContent = formatDayTitle(key);
-    el.dayPrev.disabled = key <= earliestKey();
-    el.dayNext.disabled = key >= today;
+    setNavDisabled(el.dayPrev, key <= earliestKey());
+    setNavDisabled(el.dayNext, key >= today);
     el.dayToday.hidden = key === today;
     const sum = summarizeDay(key);
     el.daySummary.textContent = sum.count
@@ -1425,6 +1531,24 @@
     renderNoteBox(key, true);
     el.copyStatus.textContent = "";
     el.copyFallback.hidden = true;
+  }
+
+  /**
+   * 端に来た前後ボタンは disabled ではなく aria-disabled にする。
+   * 押した直後にフォーカスが外れて、どこにいるか分からなくなるのを防ぐため。
+   */
+  function setNavDisabled(btn, off) {
+    btn.setAttribute("aria-disabled", String(off));
+  }
+
+  function focusSoft(node) {
+    if (!node) return;
+    if (!node.hasAttribute("tabindex")) node.setAttribute("tabindex", "-1");
+    try {
+      node.focus({ preventScroll: true });
+    } catch (e) {
+      node.focus();
+    }
   }
 
   function renderSessionList(listEl, sessions) {
@@ -1477,13 +1601,17 @@
 
   const noteTimers = {};
 
-  /** force：日を移ったときは、入力中の欄も含めて表示し直す */
+  /**
+   * force：日を移ったときは、すべての欄を表示し直す。
+   * そうでないとき（別のタブで変わったときなど）は、書きかけの欄（まだ保存していない欄）だけ残す。
+   */
   function renderNoteBox(key, force) {
     const note = Notes.get(key) || {};
     el.noteInputs.forEach((input) => {
-      if (!force && document.activeElement === input) return; // 入力中の欄は上書きしない
+      if (!force && input.dataset.dirty) return;
       input.value = note[input.dataset.note] || "";
       input.dataset.day = key;
+      delete input.dataset.dirty;
     });
     if (force) {
       el.noteBox.open = NOTE_FIELDS.some((f) => note[f]);
@@ -1497,15 +1625,16 @@
     noteTimers[id] = setTimeout(() => saveNote(input), 600);
   }
 
+  /** 書き換えた欄（dirty）だけを保存する。触れただけの欄で、別のタブの内容を上書きしないように */
   function saveNote(input) {
     clearTimeout(noteTimers[input.id]);
     delete noteTimers[input.id];
     const key = input.dataset.day;
-    if (!key) return;
-    const before = (Notes.get(key) || {})[input.dataset.note] || "";
-    if (before === input.value.trim() || before === input.value) return;
-    Notes.set(key, input.dataset.note, input.value);
-    el.noteStatus.textContent = t("noteSaved");
+    if (!key || !input.dataset.dirty) return;
+    const ok = Notes.set(key, input.dataset.note, input.value);
+    if (ok) delete input.dataset.dirty;
+    el.noteStatus.textContent = t(ok ? "noteSaved" : "noteNotSaved");
+    renderStorageNotice();
     el.clearBtn.hidden = Store.state.sessions.length === 0 && Object.keys(Notes.all()).length === 0;
   }
 
@@ -1525,15 +1654,15 @@
     const end = addDays(start, 6);
     const today = todayKey();
     el.weekTitle.textContent = t("weekRange", { from: formatDateLabel(start), to: formatDateLabel(end) });
-    el.weekPrev.disabled = start <= weekStartKey(earliestKey());
-    el.weekNext.disabled = start >= weekStartKey(today);
+    setNavDisabled(el.weekPrev, start <= weekStartKey(earliestKey()));
+    setNavDisabled(el.weekNext, start >= weekStartKey(today));
     el.weekToday.hidden = start === weekStartKey(today);
 
     const sum = summarizeRange(start, end);
     renderWeekSummary(sum);
     renderDailyChart(start, sum);
     renderDayRows(start, sum);
-    renderBands(end < today ? end : today);
+    renderBands(end < today ? end : today, start === weekStartKey(today));
     renderFlow(sum);
     renderWeekNotes(start);
   }
@@ -1600,14 +1729,20 @@
   }
 
   /** 日ごとの集中の時間：月〜日の縦棒。1本はその日の回を時刻順に積み上げたもの */
+  /** グラフは実際の表示幅で描く（文字が縮まず、12px のまま読めるように） */
+  function chartWidth(container) {
+    const w = Math.floor(container.clientWidth || 0);
+    return w >= 200 ? w : 320;
+  }
+
   function renderDailyChart(start, sum) {
-    const W = 320;
+    const W = chartWidth(el.chartDaily);
     const H = 200;
     const top = 24;
     const bottom = 26;
     const plotH = H - top - bottom;
     const colW = W / 7;
-    const barW = 26;
+    const barW = Math.min(26, colW - 10);
     const today = todayKey();
     const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
     const minutesOf = (k) => (sum.byDay[k] || []).reduce((m, s) => m + sessionSeconds(s), 0) / 60;
@@ -1627,7 +1762,7 @@
       if (future) return;
       const list = sum.byDay[k] || [];
       const minutes = minutesOf(k);
-      desc.push(formatDateLabel(k) + " " + (list.length ? t("countUnit", { n: list.length }) + "・" + t("minutesShort", { n: Math.round(minutes) }) : t("none")));
+      desc.push(formatDateLabel(k) + " " + (list.length ? t("countUnit", { n: list.length }) + "・" + formatMinutesTotal(minutes * 60) : t("none")));
       if (!list.length) {
         svgEl("line", { x1: cx - barW / 2, x2: cx + barW / 2, y1: top + plotH - 1, y2: top + plotH - 1, class: "chart-empty" }, root);
         return;
@@ -1640,7 +1775,7 @@
         svgEl("rect", { x: cx - barW / 2, y: y, width: barW, height: Math.max(h - (h > 3 ? 1 : 0), 0.5), rx: 1.5, class: levelClass(s.focus) }, root);
       });
       const value = svgEl("text", { x: cx, y: Math.max(y - 6, 12), "text-anchor": "middle", class: "chart-value" }, root);
-      value.textContent = t("minutesShort", { n: Math.round(minutes) });
+      value.textContent = formatMinutesTotal(minutes * 60);
     });
 
     root.setAttribute("aria-label", t("chartDailyTitle") + "：" + desc.join("、"));
@@ -1663,9 +1798,9 @@
       b.className = "day-row";
       b.dataset.action = "goto-day";
       b.dataset.date = k;
-      const minutes = Math.round(list.reduce((m, s) => m + sessionSeconds(s), 0) / 60);
+      const seconds = list.reduce((m, s) => m + sessionSeconds(s), 0);
       b.textContent = list.length
-        ? t("dayRow", { date: formatDateLabel(k), count: list.length, minutes })
+        ? t("dayRow", { date: formatDateLabel(k), count: list.length, duration: formatDuration(seconds) })
         : t("dayRowEmpty", { date: formatDateLabel(k) });
       li.appendChild(b);
       el.dayRows.appendChild(li);
@@ -1673,15 +1808,19 @@
   }
 
   /** 集中しやすい時間帯（ここ4週間）：時間帯ごとの横棒。長さは回数、中は集中度ごとの濃さ */
-  function renderBands(endKey) {
+  function renderBands(endKey, isCurrentWeek) {
     const r = summarizeBands(endKey);
     const labels = t("bandLabels");
+    const past = !isCurrentWeek;
+    el.bandsTitle.textContent = past
+      ? t("chartBandsTitlePast", { from: formatDateLabel(addDays(endKey, -(CONFIG.trendWindowDays - 1))), to: formatDateLabel(endKey) })
+      : t("chartBandsTitle");
     el.chartBands.textContent = "";
     el.legendBands.textContent = "";
     el.bandsTable.textContent = "";
     el.bandsTableBox.hidden = !r.enough;
     if (!r.enough) {
-      el.bandsNote.textContent = t("bandsNotEnough");
+      el.bandsNote.textContent = t(past ? "bandsNotEnoughPast" : "bandsNotEnough");
       return;
     }
 
@@ -1690,18 +1829,23 @@
       .map((b, i) => ({ i, total: b.total, high: b.levels[4] + b.levels[5] }))
       .filter((b) => b.total >= CONFIG.bandMinCount);
     const maxHigh = Math.max(0, ...candidates.map((b) => b.high));
-    if (maxHigh > 0) {
+    if (!candidates.length) {
+      // 「記録がまだ少ない」時間帯を、観察の主語にしない
+      el.bandsNote.textContent = t("bandsAllFew");
+    } else if (maxHigh > 0) {
       const items = candidates
         .filter((b) => b.high === maxHigh)
         .slice(0, 2)
         .map((b) => t("bandsObserveItem", { band: labels[b.i], total: b.total, high: b.high }));
-      el.bandsNote.textContent = t("bandsObserve", { bands: items.join(t("bandsObserveJoin")) });
+      el.bandsNote.textContent = t(past ? "bandsObservePast" : "bandsObserve", { bands: items.join(t("bandsObserveJoin")) });
     } else {
-      const most = r.bands.reduce((best, b, i) => (b.total > r.bands[best].total ? i : best), 0);
-      el.bandsNote.textContent = t("bandsMost", { band: labels[most], n: r.bands[most].total });
+      const maxTotal = Math.max(...candidates.map((b) => b.total));
+      const top = candidates.filter((b) => b.total === maxTotal).slice(0, 2);
+      const key = top.length > 1 ? (past ? "bandsMostTiePast" : "bandsMostTie") : past ? "bandsMostPast" : "bandsMost";
+      el.bandsNote.textContent = t(key, { band: top.map((b) => labels[b.i]).join(t("bandsObserveJoin")), n: maxTotal });
     }
 
-    const W = 320;
+    const W = chartWidth(el.chartBands);
     const rowH = 42;
     const H = rowH * r.bands.length + 4;
     const trackW = W - 48;
@@ -1713,7 +1857,11 @@
       const few = b.total < CONFIG.bandMinCount;
       const g = svgEl("g", { class: few ? "band-row is-few" : "band-row" }, root);
       const label = svgEl("text", { x: 0, y: y0 + 14, class: "chart-label chart-label-start" }, g);
-      label.textContent = labels[i] + (few && b.total ? "　" + t("bandsFew") : "");
+      label.textContent = labels[i];
+      if (few && b.total) {
+        const note = svgEl("tspan", { class: "chart-few", dx: 6 }, label);
+        note.textContent = t("bandsFew");
+      }
       svgEl("rect", { x: 0, y: y0 + 20, width: trackW, height: 14, rx: 3, class: "chart-track" }, g);
       let x = 0;
       [1, 2, 3, 4, 5, "none"].forEach((lv) => {
@@ -1727,16 +1875,28 @@
       count.textContent = t("countUnit", { n: b.total });
       desc.push(labels[i] + " " + t("countUnit", { n: b.total }));
     });
-    root.setAttribute("aria-label", t("chartBandsTitle") + "：" + desc.join("、"));
+    root.setAttribute("aria-label", el.bandsTitle.textContent + "：" + desc.join("、"));
     el.chartBands.appendChild(root);
     renderLegend(el.legendBands);
 
     // 数字で見る（表）
+    const caption = document.createElement("caption");
+    caption.className = "visually-hidden";
+    caption.textContent = t("tableCaption");
+    el.bandsTable.appendChild(caption);
     const thead = document.createElement("tr");
-    [t("tableBand"), t("tableCount"), "1", "2", "3", "4", "5", t("tableUnrated")].forEach((h) => {
+    [t("tableBand"), t("tableCount"), 1, 2, 3, 4, 5, t("tableUnrated")].forEach((h) => {
       const th = document.createElement("th");
       th.scope = "col";
-      th.textContent = h;
+      if (typeof h === "number") {
+        // 見た目は数字だけ、読み上げでは「集中度1」
+        const hidden = document.createElement("span");
+        hidden.className = "visually-hidden";
+        hidden.textContent = t("tableFocusPrefix");
+        th.append(hidden, String(h));
+      } else {
+        th.textContent = h;
+      }
       thead.appendChild(th);
     });
     el.bandsTable.appendChild(thead);
@@ -1993,12 +2153,13 @@
   function clearAll() {
     flushNotes();
     if (!window.confirm(t("clearConfirm"))) return;
-    Store.clearSessions();
     Notes.clear();
+    Store.clearSessions();
     recordsView.day = todayKey();
     recordsView.week = weekStartKey(recordsView.day);
     renderRecords();
     el.logStatus.textContent = t("cleared");
+    focusSoft(document.querySelector('section[data-view="log"] .lead'));
   }
 
   function openRecords() {
@@ -2179,6 +2340,15 @@
     downloadFile("coachingl-pomodoro_sessions_" + fileStamp() + ".csv", "text/csv;charset=utf-8", buildCsv());
   }
 
+  /** ダウンロードできない環境（アプリの中のブラウザなど）向けに、すべてのデータを文字で出す */
+  function showAllText() {
+    flushNotes();
+    el.allTextBox.hidden = false;
+    el.allText.value = buildJson();
+    el.allText.focus();
+    el.allText.select();
+  }
+
   function downloadJson() {
     flushNotes();
     downloadFile("coachingl-pomodoro_data_" + fileStamp() + ".json", "application/json;charset=utf-8", buildJson());
@@ -2290,28 +2460,29 @@
           setRecordsTab(target.dataset.tab);
           break;
         case "day-prev":
-          moveDay(-1);
-          break;
         case "day-next":
-          moveDay(1);
+          if (target.getAttribute("aria-disabled") === "true") break;
+          moveDay(target.dataset.action === "day-prev" ? -1 : 1);
           break;
         case "day-today":
           moveDay(0);
+          focusSoft(el.dayTitle);
           break;
         case "week-prev":
-          moveWeek(-1);
-          break;
         case "week-next":
-          moveWeek(1);
+          if (target.getAttribute("aria-disabled") === "true") break;
+          moveWeek(target.dataset.action === "week-prev" ? -1 : 1);
           break;
         case "week-today":
           moveWeek(0);
+          focusSoft(el.weekTitle);
           break;
         case "goto-day":
           recordsView.tab = "day";
           recordsView.day = target.dataset.date;
           renderRecords();
           el.panelDay.scrollIntoView({ block: "start" });
+          focusSoft(el.dayTitle);
           break;
         case "copy-day":
           copyDay();
@@ -2321,6 +2492,9 @@
           break;
         case "download-json":
           downloadJson();
+          break;
+        case "show-all-text":
+          showAllText();
           break;
         case "go-start":
           goStart();
@@ -2361,11 +2535,24 @@
     el.keepScreen.addEventListener("change", setKeepScreen);
     el.noteInputs.forEach((input) => {
       input.addEventListener("input", () => {
+        input.dataset.dirty = "1";
         el.noteStatus.textContent = "";
         scheduleNoteSave(input);
       });
       input.addEventListener("blur", () => saveNote(input));
     });
+    // 画面の幅が変わったら（回転など）、グラフを今の幅で描き直す
+    let resizeTimer = null;
+    let lastWidth = window.innerWidth;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (window.innerWidth === lastWidth) return;
+        lastWidth = window.innerWidth;
+        if (currentView === "log" && recordsView.tab === "week") renderWeek();
+      }, 200);
+    });
+
     // ページを離れる前に、保存待ちのふりかえりを保存する
     window.addEventListener("pagehide", flushNotes);
     document.addEventListener("visibilitychange", () => {
@@ -2395,6 +2582,7 @@
     // タブに戻ったとき・ページが復帰したときは、終了予定時刻から計算し直す
     const recalc = () => {
       if (document.hidden) return;
+      refreshRecordsIfDayChanged();
       Notify.closeEverywhere(); // 戻ってきたので、残っている通知は片付ける
       if (Timer.isRunning(Store.state.current)) startTicking();
       syncScreenLock();
@@ -2408,12 +2596,15 @@
       if (e.key === NOTES_KEY || e.key === null) {
         Notes.load();
         if (currentView === "log") {
-          if (recordsView.tab === "day") renderNoteBox(recordsView.day, false);
+          // ふりかえりが全部消されたとき（別のタブで全消去）は、書きかけも含めて表示し直す
+          const clearedAll = e.key === null || e.newValue === null;
+          if (recordsView.tab === "day") renderNoteBox(recordsView.day, clearedAll);
           else renderWeek();
         }
         if (e.key === NOTES_KEY) return;
       }
       if (e.key !== STORAGE_KEY && e.key !== null) return;
+      Notes.load();
       const before = JSON.stringify(Store.state.current);
       Store.load();
       applyTheme(Store.state.settings.theme);
@@ -2430,6 +2621,7 @@
     Store.load();
     Notes.load();
     applyTheme(Store.state.settings.theme);
+    scheduleMidnightRefresh();
     Notify.init();
     bindEvents();
     restore();
