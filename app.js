@@ -1,0 +1,1117 @@
+/*
+ * COACHING-L ポモドーロタイマー（MVP）
+ * ビルド不要・外部ライブラリなし・外部通信なし。データは localStorage にのみ保存します。
+ *
+ * 構成（上から順に）
+ *   1. 文言（STRINGS）
+ *   2. 設定の既定値（DEFAULTS / loadConfig）
+ *   3. 保存（Store）
+ *   4. 時間の計算（Timer）
+ *   5. チャイムと通知（Sound / Notify）
+ *   6. 集計（summarizeToday）
+ *   7. 画面の描画（render* / showView）
+ *   8. 画面遷移のアクション
+ *   9. イベント登録と起動（restore）
+ */
+(function () {
+  "use strict";
+
+  // ==========================================================================
+  // 1. 文言
+  //    UI の文言はすべてここに置きます。中国語対応時は STRINGS.zh を足し、
+  //    LANG を切り替えれば済むようにしています。
+  // ==========================================================================
+
+  const LANG = "ja";
+
+  const STRINGS = {
+    ja: {
+      brand: "COACHING-L",
+      docTitle: "ポモドーロタイマー | COACHING-L",
+      docTitleFocus: "{time} 集中の時間 | COACHING-L",
+      docTitlePaused: "{time} 一時停止中 | COACHING-L",
+      docTitleBreak: "{time} 休憩 | COACHING-L",
+      docTitleReview: "おつかれさまでした | COACHING-L",
+
+      // スタート
+      appTitle: "ポモドーロタイマー",
+      intentionLabel: "この時間で、何をする？",
+      intentionPlaceholder: "例：企画書の見出しを決める",
+      intentionHint: "空欄のままでも、はじめられます",
+      workLabel: "作業時間",
+      minutes: "{n}分",
+      minuteUnit: "分",
+      customChip: "その他",
+      customAria: "作業時間（分）",
+      customHint: "5〜60分で入力できます",
+      customInvalid: "5〜60の数字を入れてください",
+      breakSummary: "休憩は {n}分（設定で変えられます）",
+      startButton: "はじめる",
+      openLog: "今日の記録",
+      settingsTitle: "設定",
+      breakLabel: "休憩時間",
+      breakHint: "1〜30分",
+      notifyLabel: "終了のお知らせ",
+      notifyButton: "終了時に通知する",
+      notifyOn: "通知はオンになっています",
+      notifyDenied: "通知はブラウザの設定でオフになっています",
+      notifyUnsupported: "このブラウザでは通知を使えません",
+      notifyNote: "スマートフォンでは、通知が届かないことがあります。チャイムは鳴ります。",
+      breakEndedNotice: "休憩の時間が終わりました。次の時間も、自分のペースでどうぞ",
+      storageUnavailable: "この環境では記録を保存できません（タイマーは使えます）",
+
+      // 集中中
+      focusHeading: "集中の時間",
+      pause: "一時停止",
+      resume: "再開する",
+      pausedNote: "一時停止中",
+      stop: "やめる",
+
+      // やめたあと
+      stoppedMessage: "ここまでの時間も、ちゃんと記録しました。\nまた始めたくなったら、いつでもどうぞ",
+      stoppedDetail: "今回の時間：{duration}",
+      backToStart: "スタートにもどる",
+
+      // 振り返り
+      reviewTitle: "おつかれさまでした",
+      reviewIntention: "「{text}」の時間でした",
+      focusQuestion: "集中度は？",
+      focusLow: "散りがち",
+      focusHigh: "没頭できた",
+      feelingQuestion: "いまの気分は？",
+      reviewSkipHint: "どちらも、選ばなくてだいじょうぶです",
+      toBreak: "休憩へ",
+
+      // 休憩
+      breakTitle: "休憩",
+      endBreak: "スタートにもどる",
+
+      // 今日の記録
+      logTitle: "今日の記録",
+      logCount: "回数",
+      logTotal: "合計集中時間",
+      countUnit: "{n}回",
+      logEmpty: "今日の記録はまだありません。",
+      logDuration: "時間",
+      logPlanned: "（予定 {n}分）",
+      logFocus: "集中度",
+      logFeeling: "気分",
+      statusCompleted: "完了",
+      statusInterrupted: "中断",
+      noIntention: "（宣言なし）",
+      none: "—",
+      lessThanMinute: "1分未満",
+      hoursMinutes: "{h}時間{m}分",
+      back: "もどる",
+      clearAll: "すべての記録を消す",
+      clearConfirm: "すべての記録を消します。元には戻せません。よろしいですか？",
+      cleared: "記録を消しました",
+
+      // 通知
+      notifyFocusTitle: "おつかれさまでした",
+      notifyFocusBody: "集中の時間が終わりました。ひと息つきましょう",
+      notifyBreakTitle: "休憩が終わりました",
+      notifyBreakBody: "次の時間も、自分のペースでどうぞ",
+
+      // フッター
+      privacyNote: "記録はこの端末の中だけに保存され、外部には送信されません",
+
+      // 気分（保存するのはキー。表示名はここから引きます）
+      feelings: {
+        refreshed: "すっきり",
+        fulfilled: "充実",
+        neutral: "ふつう",
+        tired: "疲れた",
+        foggy: "もやもや",
+        rushed: "あせり",
+      },
+
+      // 休憩中の促し（ランダムに1つ表示）
+      breakPrompts: [
+        "立ち上がって、ぐーっと伸びをしてみましょう",
+        "水を一杯、ゆっくり飲みましょう",
+        "目を閉じて、3回ゆっくり呼吸しましょう",
+        "窓の外の、遠くを眺めてみましょう",
+        "肩を、ゆっくり回してみましょう",
+      ],
+    },
+  };
+
+  function dict() {
+    return STRINGS[LANG] || STRINGS.ja;
+  }
+
+  /** 文言を取り出す。{name} を vars の値で置き換える */
+  function t(key, vars) {
+    const d = dict();
+    let s = key in d ? d[key] : STRINGS.ja[key];
+    if (s === undefined) return key;
+    if (typeof s === "string" && vars) {
+      s = s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+    }
+    return s;
+  }
+
+  /** data-i18n 系の属性を持つ要素に文言を流し込む */
+  function applyI18n(root) {
+    document.documentElement.lang = LANG;
+    root.querySelectorAll("[data-i18n]").forEach((el) => {
+      el.textContent = t(el.dataset.i18n);
+    });
+    root.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+      el.placeholder = t(el.dataset.i18nPlaceholder);
+    });
+    root.querySelectorAll("[data-i18n-aria-label]").forEach((el) => {
+      el.setAttribute("aria-label", t(el.dataset.i18nAriaLabel));
+    });
+  }
+
+  // ==========================================================================
+  // 2. 設定の既定値
+  //    将来の「URL パラメータでの設定」は loadConfig() で既定値を上書きする形で足せます。
+  // ==========================================================================
+
+  const STORAGE_KEY = "coachingl-pomodoro-v1";
+  const SCHEMA_VERSION = 1;
+
+  const DEFAULTS = Object.freeze({
+    workMinutes: 15,
+    breakMinutes: 5,
+    workPresets: [10, 15, 25],
+    workMin: 5,
+    workMax: 60,
+    breakMin: 1,
+    breakMax: 30,
+    feelings: ["refreshed", "fulfilled", "neutral", "tired", "foggy", "rushed"],
+  });
+
+  function loadConfig() {
+    return Object.assign({}, DEFAULTS);
+  }
+
+  const CONFIG = loadConfig();
+
+  // ==========================================================================
+  // 3. 保存
+  //    1つのキーに { version, settings, sessions, current } を JSON で保存します。
+  // ==========================================================================
+
+  const Store = (function () {
+    let state = blank();
+    let available = true;
+
+    function blank() {
+      return {
+        version: SCHEMA_VERSION,
+        settings: { workMinutes: CONFIG.workMinutes, breakMinutes: CONFIG.breakMinutes },
+        sessions: [],
+        current: null,
+      };
+    }
+
+    /** 保存データを現在の形式にそろえる（形式を変えるときはここに移行処理を足す） */
+    function migrate(data) {
+      const base = blank();
+      if (!data || typeof data !== "object") return base;
+      return {
+        version: SCHEMA_VERSION,
+        settings: Object.assign(base.settings, isObject(data.settings) ? data.settings : {}),
+        sessions: Array.isArray(data.sessions) ? data.sessions.filter(isObject) : [],
+        current: isObject(data.current) ? data.current : null,
+      };
+    }
+
+    function load() {
+      let raw = null;
+      try {
+        raw = window.localStorage.getItem(STORAGE_KEY);
+      } catch (e) {
+        available = false;
+      }
+      let data = null;
+      if (raw) {
+        try {
+          data = JSON.parse(raw);
+        } catch (e) {
+          data = null;
+        }
+      }
+      state = migrate(data);
+      return state;
+    }
+
+    function save() {
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        available = true;
+      } catch (e) {
+        available = false;
+      }
+    }
+
+    return {
+      load,
+      get state() {
+        return state;
+      },
+      get available() {
+        return available;
+      },
+      setCurrent(current) {
+        state.current = current;
+        save();
+      },
+      updateCurrent(patch) {
+        if (!state.current) return;
+        state.current = Object.assign({}, state.current, patch);
+        save();
+      },
+      updateSettings(patch) {
+        state.settings = Object.assign({}, state.settings, patch);
+        save();
+      },
+      /** 同じ id があれば上書き、なければ追加（複数タブでの二重記録を防ぐ） */
+      upsertSession(session) {
+        const i = state.sessions.findIndex((s) => s.id === session.id);
+        if (i >= 0) state.sessions[i] = Object.assign({}, state.sessions[i], session);
+        else state.sessions.push(session);
+        save();
+      },
+      updateSession(id, patch) {
+        const i = state.sessions.findIndex((s) => s.id === id);
+        if (i < 0) return;
+        state.sessions[i] = Object.assign({}, state.sessions[i], patch);
+        save();
+      },
+      clearSessions() {
+        state.sessions = [];
+        save();
+      },
+    };
+  })();
+
+  function isObject(v) {
+    return v !== null && typeof v === "object" && !Array.isArray(v);
+  }
+
+  function newId() {
+    return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+  }
+
+  // ==========================================================================
+  // 4. 時間の計算
+  //    「終了予定時刻（endAt）」だけを保存し、表示のたびに現在時刻との差を計算します。
+  //    一時停止中は endAt を null にして、残り時間（remainingMs）を保存します。
+  // ==========================================================================
+
+  const Timer = {
+    remainingMs(current, now) {
+      if (!current) return 0;
+      if (current.endAt == null) return Math.max(0, Number(current.remainingMs) || 0);
+      return Math.max(0, current.endAt - now);
+    },
+    isRunning(current) {
+      return !!current && current.endAt != null;
+    },
+    formatClock(ms) {
+      const total = Math.ceil(ms / 1000);
+      const m = Math.floor(total / 60);
+      const s = total % 60;
+      return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+    },
+  };
+
+  function formatDuration(seconds) {
+    const s = Math.max(0, Math.round(seconds));
+    if (s > 0 && s < 60) return t("lessThanMinute");
+    const totalMinutes = Math.floor(s / 60);
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    return h > 0 ? t("hoursMinutes", { h, m }) : t("minutes", { n: m });
+  }
+
+  /** 1回分の時間。短くても「0分」ではなく「1分未満」と表示する */
+  function formatSessionDuration(seconds) {
+    return seconds < 60 ? t("lessThanMinute") : formatDuration(seconds);
+  }
+
+  function formatTimeOfDay(ts) {
+    const d = new Date(ts);
+    return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  }
+
+  // 表示更新の予約。表示用（秒の境目ごと）と終了検知用（終了時刻に1回）の2本。
+  let tickTimer = null;
+  let endTimer = null;
+
+  function stopTicking() {
+    clearTimeout(tickTimer);
+    clearTimeout(endTimer);
+    tickTimer = null;
+    endTimer = null;
+  }
+
+  function startTicking() {
+    stopTicking();
+    const cur = Store.state.current;
+    if (!Timer.isRunning(cur)) {
+      renderClock(Date.now());
+      return;
+    }
+    endTimer = setTimeout(tick, Math.max(0, cur.endAt - Date.now()));
+    tick();
+  }
+
+  function tick() {
+    clearTimeout(tickTimer);
+    tickTimer = null;
+    const cur = Store.state.current;
+    if (!Timer.isRunning(cur)) return;
+    const now = Date.now();
+    if (now >= cur.endAt) {
+      onPhaseEnd(false);
+      return;
+    }
+    renderClock(now);
+    // 表示上の秒が次に変わる瞬間（＋少しの余裕）に合わせて呼び直す
+    const untilNextSecond = (cur.endAt - now) % 1000 || 1000;
+    tickTimer = setTimeout(tick, untilNextSecond + 15);
+  }
+
+  // ==========================================================================
+  // 5. チャイムと通知
+  // ==========================================================================
+
+  const Sound = (function () {
+    let ctx = null;
+    let primed = false;
+
+    function getContext() {
+      if (ctx) return ctx;
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      try {
+        ctx = new AC();
+      } catch (e) {
+        ctx = null;
+      }
+      return ctx;
+    }
+
+    /** ユーザー操作の中で呼び、自動再生の制限を解除しておく */
+    function unlock() {
+      const c = getContext();
+      if (!c) return;
+      if (c.state === "suspended") c.resume().catch(() => {});
+      if (!primed) {
+        // iOS Safari 向け：無音を一瞬鳴らして再生可能な状態にする
+        try {
+          const src = c.createBufferSource();
+          src.buffer = c.createBuffer(1, 1, 22050);
+          src.connect(c.destination);
+          src.start(0);
+          primed = true;
+        } catch (e) {
+          /* 何もしない */
+        }
+      }
+    }
+
+    /** やわらかい2音のチャイム（サイン波＋弱い倍音、ゆっくり減衰） */
+    function chime() {
+      const c = getContext();
+      if (!c) return;
+      if (c.state === "suspended") c.resume().catch(() => {});
+      try {
+        const start = c.currentTime + 0.05;
+        const master = c.createGain();
+        master.gain.value = 0.2;
+        master.connect(c.destination);
+        const notes = [
+          { freq: 659.25, at: 0 }, // E5
+          { freq: 880.0, at: 0.32 }, // A5
+        ];
+        notes.forEach((note) => {
+          const t0 = start + note.at;
+          [
+            { mult: 1, level: 1 },
+            { mult: 2, level: 0.12 },
+          ].forEach((partial) => {
+            const osc = c.createOscillator();
+            const gain = c.createGain();
+            osc.type = "sine";
+            osc.frequency.value = note.freq * partial.mult;
+            gain.gain.setValueAtTime(0.0001, t0);
+            gain.gain.exponentialRampToValueAtTime(partial.level, t0 + 0.015);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.4);
+            osc.connect(gain);
+            gain.connect(master);
+            osc.start(t0);
+            osc.stop(t0 + 1.5);
+          });
+        });
+      } catch (e) {
+        /* 音が鳴らなくてもタイマーは続ける */
+      }
+    }
+
+    return { unlock, chime };
+  })();
+
+  const Notify = {
+    supported() {
+      return "Notification" in window;
+    },
+    permission() {
+      return this.supported() ? window.Notification.permission : "unsupported";
+    },
+    request() {
+      if (!this.supported()) return Promise.resolve("unsupported");
+      return new Promise((resolve) => {
+        try {
+          const p = window.Notification.requestPermission(resolve);
+          if (p && typeof p.then === "function") p.then(resolve, () => resolve(this.permission()));
+        } catch (e) {
+          resolve(this.permission());
+        }
+      });
+    },
+    show(title, body) {
+      if (this.permission() !== "granted") return;
+      try {
+        const n = new window.Notification(title, { body, tag: "coachingl-pomodoro" });
+        n.onclick = () => {
+          window.focus();
+          n.close();
+        };
+      } catch (e) {
+        /* Android Chrome などは new Notification に対応していない */
+      }
+    },
+  };
+
+  // ==========================================================================
+  // 6. 集計
+  //    「一日のまとめのコピー」など、今後の機能でも使い回せるよう画面から切り離しています。
+  // ==========================================================================
+
+  function isSameLocalDay(ts, ref) {
+    const d = new Date(ts);
+    return (
+      d.getFullYear() === ref.getFullYear() &&
+      d.getMonth() === ref.getMonth() &&
+      d.getDate() === ref.getDate()
+    );
+  }
+
+  function sessionSeconds(s) {
+    if (typeof s.focusedSeconds === "number") return s.focusedSeconds;
+    if (s.status === "completed") return (Number(s.plannedMinutes) || 0) * 60;
+    return Math.max(0, Math.round(((s.endedAt || 0) - (s.startedAt || 0)) / 1000));
+  }
+
+  function summarizeToday(sessions, now) {
+    const ref = now || new Date();
+    const list = sessions
+      .filter((s) => typeof s.startedAt === "number" && isSameLocalDay(s.startedAt, ref))
+      .sort((a, b) => a.startedAt - b.startedAt);
+    return {
+      sessions: list,
+      count: list.length,
+      completedCount: list.filter((s) => s.status === "completed").length,
+      totalSeconds: list.reduce((sum, s) => sum + sessionSeconds(s), 0),
+    };
+  }
+
+  // ==========================================================================
+  // 7. 画面の描画
+  // ==========================================================================
+
+  const $ = (sel) => document.querySelector(sel);
+
+  const el = {};
+  let currentView = null;
+  let selectedWork = CONFIG.workMinutes; // 数値、または "custom"
+
+  function cacheElements() {
+    el.views = Array.from(document.querySelectorAll("[data-view]"));
+    el.startNotice = $("#start-notice");
+    el.storageNotice = $("#storage-notice");
+    el.startForm = $("#start-form");
+    el.intention = $("#intention");
+    el.workChips = Array.from(document.querySelectorAll("[data-work]"));
+    el.customRow = $("#custom-row");
+    el.workCustom = $("#work-custom");
+    el.customHint = $("#custom-hint");
+    el.breakSummary = $("#break-summary");
+    el.breakMinutes = $("#break-minutes");
+    el.notifyBtn = $("#notify-btn");
+    el.notifyStatus = $("#notify-status");
+    el.focusView = $('[data-view="focus"]');
+    el.focusTime = $("#focus-time");
+    el.focusIntention = $("#focus-intention");
+    el.pausedNote = $("#paused-note");
+    el.pauseBtn = $("#pause-btn");
+    el.stoppedDetail = $("#stopped-detail");
+    el.reviewIntention = $("#review-intention");
+    el.focusChips = Array.from(document.querySelectorAll("[data-focus]"));
+    el.feelingChips = $("#feeling-chips");
+    el.breakTime = $("#break-time");
+    el.breakPrompt = $("#break-prompt");
+    el.sumCount = $("#sum-count");
+    el.sumTotal = $("#sum-total");
+    el.logList = $("#log-list");
+    el.logEmpty = $("#log-empty");
+    el.logStatus = $("#log-status");
+    el.clearBtn = $("#clear-btn");
+  }
+
+  /** 文言だけで決まる部品を組み立てる（起動時に1回） */
+  function buildStaticParts() {
+    el.workChips.forEach((chip) => {
+      const n = Number(chip.dataset.work);
+      if (n) chip.textContent = t("minutes", { n });
+    });
+    el.workCustom.min = String(CONFIG.workMin);
+    el.workCustom.max = String(CONFIG.workMax);
+    el.breakMinutes.min = String(CONFIG.breakMin);
+    el.breakMinutes.max = String(CONFIG.breakMax);
+
+    const labels = t("feelings");
+    el.feelingChips.textContent = "";
+    CONFIG.feelings.forEach((key) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "chip";
+      b.dataset.action = "select-feeling";
+      b.dataset.feeling = key;
+      b.setAttribute("aria-pressed", "false");
+      b.textContent = labels[key] || key;
+      el.feelingChips.appendChild(b);
+    });
+  }
+
+  function showView(name, params) {
+    currentView = name;
+    el.views.forEach((v) => {
+      v.hidden = v.dataset.view !== name;
+    });
+    document.body.dataset.screen = name;
+    const render = renderers[name];
+    if (render) render(params || {});
+    updateDocumentTitle(Date.now());
+    window.scrollTo(0, 0);
+    // 画面が切り替わったことを支援技術に伝えるため、見出しへフォーカスを移す
+    const heading = document.querySelector('section[data-view="' + name + '"] [tabindex="-1"]');
+    if (heading) {
+      try {
+        heading.focus({ preventScroll: true });
+      } catch (e) {
+        heading.focus();
+      }
+    }
+  }
+
+  const renderers = {
+    start(params) {
+      const settings = Store.state.settings;
+      const preset = CONFIG.workPresets.indexOf(Number(settings.workMinutes)) >= 0;
+      selectedWork = preset ? Number(settings.workMinutes) : "custom";
+      if (!preset) el.workCustom.value = String(settings.workMinutes);
+      renderWorkChoice();
+      renderBreakSetting();
+      renderNotifyStatus();
+      el.startNotice.hidden = !params.notice;
+      el.startNotice.textContent = params.notice || "";
+      el.storageNotice.hidden = Store.available;
+    },
+    focus() {
+      const cur = Store.state.current;
+      const paused = !Timer.isRunning(cur);
+      el.focusIntention.textContent = cur.intention || "";
+      el.focusIntention.hidden = !cur.intention;
+      el.pausedNote.hidden = !paused;
+      el.pauseBtn.textContent = paused ? t("resume") : t("pause");
+      el.focusView.dataset.paused = paused ? "true" : "false";
+      renderClock(Date.now());
+    },
+    stopped(params) {
+      el.stoppedDetail.textContent = t("stoppedDetail", {
+        duration: formatSessionDuration(params.focusedSeconds || 0),
+      });
+    },
+    review() {
+      const cur = Store.state.current;
+      const review = (cur && cur.review) || {};
+      el.reviewIntention.textContent = cur && cur.intention ? t("reviewIntention", { text: cur.intention }) : "";
+      el.reviewIntention.hidden = !(cur && cur.intention);
+      el.focusChips.forEach((b) => {
+        b.setAttribute("aria-pressed", String(Number(b.dataset.focus) === review.focus));
+      });
+      el.feelingChips.querySelectorAll("[data-feeling]").forEach((b) => {
+        b.setAttribute("aria-pressed", String(b.dataset.feeling === review.feeling));
+      });
+    },
+    break() {
+      const cur = Store.state.current;
+      const prompts = t("breakPrompts");
+      el.breakPrompt.textContent = prompts[(cur.promptIndex || 0) % prompts.length];
+      renderClock(Date.now());
+    },
+    log() {
+      renderLog();
+    },
+  };
+
+  function renderWorkChoice() {
+    el.workChips.forEach((chip) => {
+      const value = chip.dataset.work === "custom" ? "custom" : Number(chip.dataset.work);
+      chip.setAttribute("aria-pressed", String(value === selectedWork));
+    });
+    el.customRow.hidden = selectedWork !== "custom";
+    el.customHint.textContent = t("customHint");
+    el.customHint.classList.remove("hint-warn");
+  }
+
+  function renderBreakSetting() {
+    const n = Store.state.settings.breakMinutes;
+    el.breakMinutes.value = String(n);
+    el.breakSummary.textContent = t("breakSummary", { n });
+  }
+
+  function renderNotifyStatus() {
+    const p = Notify.permission();
+    el.notifyBtn.hidden = p !== "default";
+    if (p === "granted") el.notifyStatus.textContent = t("notifyOn");
+    else if (p === "denied") el.notifyStatus.textContent = t("notifyDenied");
+    else if (p === "unsupported") el.notifyStatus.textContent = t("notifyUnsupported");
+    else el.notifyStatus.textContent = "";
+  }
+
+  /** 残り時間の表示とタブのタイトルを更新する（毎回 endAt から計算） */
+  function renderClock(now) {
+    const cur = Store.state.current;
+    if (!cur) return;
+    const text = Timer.formatClock(Timer.remainingMs(cur, now));
+    if (cur.phase === "focus") el.focusTime.textContent = text;
+    else if (cur.phase === "break") el.breakTime.textContent = text;
+    updateDocumentTitle(now);
+  }
+
+  function updateDocumentTitle(now) {
+    const cur = Store.state.current;
+    let title = t("docTitle");
+    if (cur && (currentView === "focus" || currentView === "break")) {
+      const time = Timer.formatClock(Timer.remainingMs(cur, now));
+      if (cur.phase === "focus") title = t(Timer.isRunning(cur) ? "docTitleFocus" : "docTitlePaused", { time });
+      else if (cur.phase === "break") title = t("docTitleBreak", { time });
+    } else if (currentView === "review") {
+      title = t("docTitleReview");
+    }
+    if (document.title !== title) document.title = title;
+  }
+
+  function renderLog() {
+    const summary = summarizeToday(Store.state.sessions, new Date());
+    const feelings = t("feelings");
+    el.sumCount.textContent = t("countUnit", { n: summary.count });
+    el.sumTotal.textContent = formatDuration(summary.totalSeconds);
+    el.logEmpty.hidden = summary.count > 0;
+    el.clearBtn.hidden = Store.state.sessions.length === 0;
+    el.logList.textContent = "";
+
+    summary.sessions.forEach((s) => {
+      const li = document.createElement("li");
+      li.className = "log-item";
+
+      const head = document.createElement("div");
+      head.className = "log-head";
+      const time = document.createElement("time");
+      time.className = "log-time";
+      time.dateTime = new Date(s.startedAt).toISOString();
+      time.textContent = formatTimeOfDay(s.startedAt);
+      const badge = document.createElement("span");
+      const done = s.status === "completed";
+      badge.className = "badge " + (done ? "badge-completed" : "badge-interrupted");
+      badge.textContent = done ? t("statusCompleted") : t("statusInterrupted");
+      head.append(time, badge);
+
+      const intention = document.createElement("p");
+      intention.className = "log-intention" + (s.intention ? "" : " is-empty");
+      intention.textContent = s.intention || t("noIntention");
+
+      const meta = document.createElement("dl");
+      meta.className = "log-meta";
+      let duration = formatSessionDuration(sessionSeconds(s));
+      if (!done && s.plannedMinutes) duration += t("logPlanned", { n: s.plannedMinutes });
+      [
+        [t("logDuration"), duration],
+        [t("logFocus"), s.focus ? String(s.focus) : t("none")],
+        [t("logFeeling"), s.feeling ? feelings[s.feeling] || s.feeling : t("none")],
+      ].forEach(([label, value]) => {
+        const row = document.createElement("div");
+        const dt = document.createElement("dt");
+        const dd = document.createElement("dd");
+        dt.textContent = label;
+        dd.textContent = value;
+        row.append(dt, dd);
+        meta.appendChild(row);
+      });
+
+      li.append(head, intention, meta);
+      el.logList.appendChild(li);
+    });
+  }
+
+  // ==========================================================================
+  // 8. 画面遷移のアクション
+  // ==========================================================================
+
+  function readWorkMinutes() {
+    if (selectedWork !== "custom") return selectedWork;
+    const n = Number(el.workCustom.value);
+    if (!Number.isInteger(n) || n < CONFIG.workMin || n > CONFIG.workMax) return null;
+    return n;
+  }
+
+  function startFocus() {
+    const minutes = readWorkMinutes();
+    if (minutes == null) {
+      el.customHint.textContent = t("customInvalid");
+      el.customHint.classList.add("hint-warn");
+      el.workCustom.focus();
+      return;
+    }
+    Sound.unlock();
+    const intention = el.intention.value.trim();
+    const now = Date.now();
+    Store.updateSettings({ workMinutes: minutes });
+    Store.setCurrent({
+      phase: "focus",
+      sessionId: newId(),
+      startedAt: now,
+      plannedMinutes: minutes,
+      intention,
+      endAt: now + minutes * 60000,
+      remainingMs: null,
+    });
+    el.intention.value = "";
+    el.intention.blur();
+    showView("focus");
+    startTicking();
+  }
+
+  function togglePause() {
+    const cur = Store.state.current;
+    if (!cur || cur.phase !== "focus") return;
+    const now = Date.now();
+    if (Timer.isRunning(cur)) {
+      const rest = cur.endAt - now;
+      if (rest <= 0) {
+        onPhaseEnd(false);
+        return;
+      }
+      Store.updateCurrent({ endAt: null, remainingMs: rest });
+      stopTicking();
+    } else {
+      Sound.unlock();
+      Store.updateCurrent({ endAt: now + Number(cur.remainingMs || 0), remainingMs: null });
+      startTicking();
+    }
+    renderers.focus();
+    updateDocumentTitle(now);
+  }
+
+  function stopFocus() {
+    const cur = Store.state.current;
+    if (!cur || cur.phase !== "focus") return;
+    const now = Date.now();
+    if (Timer.isRunning(cur) && now >= cur.endAt) {
+      onPhaseEnd(false);
+      return;
+    }
+    stopTicking();
+    const plannedMs = cur.plannedMinutes * 60000;
+    const focusedSeconds = Math.max(0, Math.round((plannedMs - Timer.remainingMs(cur, now)) / 1000));
+    Store.upsertSession({
+      id: cur.sessionId,
+      startedAt: cur.startedAt,
+      endedAt: now,
+      plannedMinutes: cur.plannedMinutes,
+      intention: cur.intention,
+      status: "interrupted",
+      focus: null,
+      feeling: null,
+      focusedSeconds,
+    });
+    Store.setCurrent(null);
+    showView("stopped", { focusedSeconds });
+  }
+
+  /** 作業時間が終わったとき。この時点で「完了」として記録しておく */
+  function completeFocus(endedAt, silent) {
+    const cur = Store.state.current;
+    stopTicking();
+    Store.upsertSession({
+      id: cur.sessionId,
+      startedAt: cur.startedAt,
+      endedAt,
+      plannedMinutes: cur.plannedMinutes,
+      intention: cur.intention,
+      status: "completed",
+      focus: null,
+      feeling: null,
+      focusedSeconds: cur.plannedMinutes * 60,
+    });
+    Store.setCurrent({
+      phase: "review",
+      sessionId: cur.sessionId,
+      startedAt: cur.startedAt,
+      plannedMinutes: cur.plannedMinutes,
+      intention: cur.intention,
+      endAt: null,
+      remainingMs: null,
+      review: { focus: null, feeling: null },
+    });
+    showView("review");
+    if (!silent) {
+      Sound.chime();
+      Notify.show(t("notifyFocusTitle"), t("notifyFocusBody"));
+    }
+  }
+
+  function selectReview(field, value) {
+    const cur = Store.state.current;
+    if (!cur || cur.phase !== "review") return;
+    const review = Object.assign({ focus: null, feeling: null }, cur.review);
+    review[field] = review[field] === value ? null : value; // もう一度押すと選択を外す
+    Store.updateCurrent({ review });
+    renderers.review();
+  }
+
+  function saveReviewAndBreak() {
+    const cur = Store.state.current;
+    if (!cur || cur.phase !== "review") return;
+    const review = cur.review || {};
+    Store.updateSession(cur.sessionId, {
+      focus: review.focus || null,
+      feeling: review.feeling || null,
+    });
+    startBreak();
+  }
+
+  function startBreak() {
+    Sound.unlock();
+    const minutes = Store.state.settings.breakMinutes;
+    const now = Date.now();
+    Store.setCurrent({
+      phase: "break",
+      startedAt: now,
+      plannedMinutes: minutes,
+      endAt: now + minutes * 60000,
+      remainingMs: null,
+      promptIndex: Math.floor(Math.random() * t("breakPrompts").length),
+    });
+    showView("break");
+    startTicking();
+  }
+
+  /** 休憩の時間が終わったとき */
+  function finishBreak(silent) {
+    stopTicking();
+    Store.setCurrent(null);
+    showView("start", { notice: t("breakEndedNotice") });
+    if (!silent) {
+      Sound.chime();
+      Notify.show(t("notifyBreakTitle"), t("notifyBreakBody"));
+    }
+  }
+
+  /** 休憩を途中で切り上げてスタートへ */
+  function endBreakEarly() {
+    stopTicking();
+    Store.setCurrent(null);
+    showView("start");
+  }
+
+  function onPhaseEnd(silent) {
+    const cur = Store.state.current;
+    if (!cur) return;
+    if (cur.phase === "focus") completeFocus(cur.endAt, silent);
+    else if (cur.phase === "break") finishBreak(silent);
+  }
+
+  function goStart() {
+    if (Store.state.current) {
+      restore();
+      return;
+    }
+    showView("start");
+  }
+
+  function clearAll() {
+    if (!window.confirm(t("clearConfirm"))) return;
+    Store.clearSessions();
+    renderLog();
+    el.logStatus.textContent = t("cleared");
+  }
+
+  function setBreakMinutes() {
+    const n = Number(el.breakMinutes.value);
+    if (Number.isInteger(n) && n >= CONFIG.breakMin && n <= CONFIG.breakMax) {
+      Store.updateSettings({ breakMinutes: n });
+    }
+    renderBreakSetting();
+  }
+
+  function requestNotify() {
+    Sound.unlock();
+    Notify.request().then(renderNotifyStatus);
+  }
+
+  // ==========================================================================
+  // 9. イベント登録と起動
+  // ==========================================================================
+
+  /** 保存されている状態から画面を復元する（再読み込み・別タブでの変更時） */
+  function restore() {
+    stopTicking();
+    const cur = Store.state.current;
+    const now = Date.now();
+    if (!isValidCurrent(cur)) {
+      if (cur) Store.setCurrent(null);
+      showView("start");
+      return;
+    }
+    if (cur.phase === "focus") {
+      if (Timer.isRunning(cur) && now >= cur.endAt) {
+        completeFocus(cur.endAt, true); // 閉じている間に終わっていた
+        return;
+      }
+      showView("focus");
+      startTicking();
+    } else if (cur.phase === "review") {
+      showView("review");
+    } else if (cur.phase === "break") {
+      if (Timer.isRunning(cur) && now >= cur.endAt) {
+        finishBreak(true);
+        return;
+      }
+      showView("break");
+      startTicking();
+    }
+  }
+
+  function isValidCurrent(cur) {
+    if (!isObject(cur)) return false;
+    if (["focus", "review", "break"].indexOf(cur.phase) < 0) return false;
+    if (typeof cur.plannedMinutes !== "number") return false;
+    if (cur.phase === "review") return typeof cur.sessionId === "string";
+    if (cur.endAt == null) return typeof cur.remainingMs === "number";
+    return typeof cur.endAt === "number";
+  }
+
+  function bindEvents() {
+    el.startForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      startFocus();
+    });
+
+    document.addEventListener("click", (e) => {
+      const target = e.target.closest("[data-action]");
+      if (!target) return;
+      switch (target.dataset.action) {
+        case "select-work": {
+          const v = target.dataset.work;
+          selectedWork = v === "custom" ? "custom" : Number(v);
+          if (selectedWork !== "custom") Store.updateSettings({ workMinutes: selectedWork });
+          renderWorkChoice();
+          if (selectedWork === "custom") {
+            if (!el.workCustom.value) el.workCustom.value = String(Store.state.settings.workMinutes);
+            el.workCustom.focus();
+          }
+          break;
+        }
+        case "open-log":
+          el.logStatus.textContent = "";
+          showView("log");
+          break;
+        case "go-start":
+          goStart();
+          break;
+        case "toggle-pause":
+          togglePause();
+          break;
+        case "stop":
+          stopFocus();
+          break;
+        case "select-focus":
+          selectReview("focus", Number(target.dataset.focus));
+          break;
+        case "select-feeling":
+          selectReview("feeling", target.dataset.feeling);
+          break;
+        case "to-break":
+          saveReviewAndBreak();
+          break;
+        case "end-break":
+          endBreakEarly();
+          break;
+        case "clear-all":
+          clearAll();
+          break;
+        case "request-notify":
+          requestNotify();
+          break;
+        default:
+          break;
+      }
+    });
+
+    el.breakMinutes.addEventListener("change", setBreakMinutes);
+    el.workCustom.addEventListener("input", () => {
+      el.customHint.textContent = t("customHint");
+      el.customHint.classList.remove("hint-warn");
+      const n = readWorkMinutes();
+      if (n != null) Store.updateSettings({ workMinutes: n });
+    });
+
+    // ユーザー操作のたびに音の再生制限を解除しておく（再読み込み後でもチャイムが鳴るように）
+    ["pointerdown", "keydown"].forEach((type) => {
+      document.addEventListener(type, () => Sound.unlock(), { passive: true });
+    });
+
+    // タブに戻ったとき・ページが復帰したときは、終了予定時刻から計算し直す
+    const recalc = () => {
+      if (document.hidden) return;
+      if (Timer.isRunning(Store.state.current)) startTicking();
+    };
+    document.addEventListener("visibilitychange", recalc);
+    window.addEventListener("pageshow", recalc);
+    window.addEventListener("focus", recalc);
+
+    // 別のタブで状態が変わったら追従する
+    window.addEventListener("storage", (e) => {
+      if (e.key !== STORAGE_KEY && e.key !== null) return;
+      const before = JSON.stringify(Store.state.current);
+      Store.load();
+      if (JSON.stringify(Store.state.current) !== before) restore();
+      else if (currentView === "log") renderLog();
+    });
+  }
+
+  function init() {
+    cacheElements();
+    applyI18n(document);
+    buildStaticParts();
+    Store.load();
+    bindEvents();
+    restore();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
