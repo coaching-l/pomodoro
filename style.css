@@ -514,6 +514,8 @@ legend.field-label {
   box-shadow: var(--shadow);
   font-size: 1.125rem;
   line-height: 1.7;
+  text-wrap: balance;
+  word-break: auto-phrase;
 }
 
 .message {
