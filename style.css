@@ -462,6 +462,25 @@ legend.field-label {
   align-self: flex-start;
 }
 
+/* オン・オフの切り替え（チェックボックス） */
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.toggle input {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 /* ---------- 集中・休憩 ---------- */
 
 .time {

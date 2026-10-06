@@ -51,12 +51,21 @@
       settingsTitle: "設定",
       breakLabel: "休憩時間",
       breakHint: "1〜30分",
+      screenLabel: "画面",
+      keepScreenLabel: "タイマーの間は、画面をつけたままにする",
+      keepScreenHint: "スマートフォンは画面が消えるとチャイムが鳴りません。オンにすると、タイマーの間は画面が自動で消えなくなります（電池を少し多く使います）。",
+      keepScreenUnsupported: "このブラウザでは、画面をつけたままにする機能を使えません。チャイムを鳴らしたいときは、画面をつけたまま、このページを開いておいてください。",
       notifyLabel: "終了のお知らせ",
       notifyButton: "終了時に通知する",
-      notifyOn: "通知はオンになっています",
+      notifyOn: "ブラウザの通知はオンです",
       notifyDenied: "通知はブラウザの設定でオフになっています",
       notifyUnsupported: "このブラウザでは通知を使えません",
-      notifyNote: "スマートフォンでは、通知が届かないことがあります。チャイムは鳴ります。",
+      notifyTest: "テスト通知を送る（5秒後）",
+      notifyTestSent: "5秒後に通知します。別のアプリに切り替えて、届くか確かめてください。",
+      notifyTestTitle: "テスト通知",
+      notifyTestBody: "通知は届いています。タイマーが終わったときも、このようにお知らせします。",
+      notifyOsHint: "届かないときは、パソコン側の設定を確認してください。Mac は「システム設定 → 通知」で、使っているブラウザ（Google Chrome など）の「通知を許可」をオンにします。Windows は「設定 → システム → 通知」です。集中モードやおやすみモード（応答不可）の間は表示されません。",
+      notifyNote: "スマートフォンのブラウザでは、通知は届きません。チャイムでお知らせします。",
       breakEndedNotice: "休憩の時間が終わりました。次の時間も、自分のペースでどうぞ",
       storageUnavailable: "この環境では記録を保存できません（タイマーは使えます）",
 
@@ -75,6 +84,7 @@
       // 振り返り
       reviewTitle: "おつかれさまでした",
       reviewIntention: "「{text}」の時間でした",
+      finishedWhileAway: "タイマーは {time} に終わっていました",
       focusQuestion: "集中度は？",
       focusLow: "散りがち",
       focusHigh: "没頭できた",
@@ -222,7 +232,7 @@
     function blank() {
       return {
         version: SCHEMA_VERSION,
-        settings: { workMinutes: CONFIG.workMinutes, breakMinutes: CONFIG.breakMinutes },
+        settings: { workMinutes: CONFIG.workMinutes, breakMinutes: CONFIG.breakMinutes, keepScreenOn: true },
         sessions: [],
         current: null,
         // 休憩の促しの「山札」。remaining が空になったら切り直す
@@ -445,7 +455,6 @@
 
   const Sound = (function () {
     let ctx = null;
-    let primed = false;
 
     function getContext() {
       if (ctx) return ctx;
@@ -459,30 +468,27 @@
       return ctx;
     }
 
-    /** ユーザー操作の中で呼び、自動再生の制限を解除しておく */
+    /**
+     * ユーザー操作の中で呼び、自動再生の制限を解除しておく。
+     * iPhone では画面ロックなどのあと "interrupted" になるので、"running" 以外なら再開を試みる。
+     */
     function unlock() {
       const c = getContext();
-      if (!c) return;
-      if (c.state === "suspended") c.resume().catch(() => {});
-      if (!primed) {
-        // iOS Safari 向け：無音を一瞬鳴らして再生可能な状態にする
-        try {
-          const src = c.createBufferSource();
-          src.buffer = c.createBuffer(1, 1, 22050);
-          src.connect(c.destination);
-          src.start(0);
-          primed = true;
-        } catch (e) {
-          /* 何もしない */
-        }
+      if (!c || c.state === "running") return;
+      c.resume().catch(() => {});
+      // iOS Safari 向け：無音を一瞬鳴らして再生可能な状態にする
+      try {
+        const src = c.createBufferSource();
+        src.buffer = c.createBuffer(1, 1, 22050);
+        src.connect(c.destination);
+        src.start(0);
+      } catch (e) {
+        /* 何もしない */
       }
     }
 
     /** やわらかい2音のチャイム（サイン波＋弱い倍音、ゆっくり減衰） */
-    function chime() {
-      const c = getContext();
-      if (!c) return;
-      if (c.state === "suspended") c.resume().catch(() => {});
+    function play(c) {
       try {
         const start = c.currentTime + 0.05;
         const master = c.createGain();
@@ -516,10 +522,96 @@
       }
     }
 
+    /**
+     * チャイムを鳴らす。音を出せる状態でなければ少しだけ待つ（タブに戻った直後など）。
+     * 待っても鳴らせないときは諦める。次に画面に触れたときに遅れて鳴るのを防ぐため。
+     */
+    function chime() {
+      const c = getContext();
+      if (!c) return;
+      if (c.state === "running") {
+        play(c);
+        return;
+      }
+      let timer = null;
+      const onChange = () => {
+        if (c.state !== "running") return;
+        cleanup();
+        play(c);
+      };
+      const cleanup = () => {
+        c.removeEventListener("statechange", onChange);
+        clearTimeout(timer);
+      };
+      c.addEventListener("statechange", onChange);
+      timer = setTimeout(cleanup, 1500);
+      c.resume().catch(() => {});
+    }
+
     return { unlock, chime };
   })();
 
+  /**
+   * タイマーの間、画面が自動で消えないようにする（Screen Wake Lock）。
+   * スマートフォンは画面が消えるとページの動きが止まり、チャイムが鳴らないため。
+   * ページが隠れると自動で解除されるので、表示に戻ったら取り直す。
+   */
+  const ScreenLock = (function () {
+    let sentinel = null;
+    let pending = false;
+
+    function supported() {
+      return "wakeLock" in navigator;
+    }
+
+    function acquire() {
+      if (!supported() || document.hidden || pending || (sentinel && !sentinel.released)) return;
+      pending = true;
+      navigator.wakeLock
+        .request("screen")
+        .then((s) => {
+          sentinel = s;
+          s.addEventListener("release", () => {
+            if (sentinel === s) sentinel = null;
+          });
+          // 取得を待つ間に不要になっていたら、すぐ手放す
+          if (!wanted()) release();
+        })
+        .catch(() => {
+          /* 操作がない・電池残量が少ないなどで断られることがある。次の操作で取り直す */
+        })
+        .then(() => {
+          pending = false;
+        });
+    }
+
+    function release() {
+      if (!sentinel) return;
+      const s = sentinel;
+      sentinel = null;
+      s.release().catch(() => {});
+    }
+
+    return { supported, acquire, release };
+  })();
+
+  /** 動いているタイマーがあり、設定がオンのときだけ画面をつけたままにする */
+  function wanted() {
+    const cur = Store.state.current;
+    return (
+      Store.state.settings.keepScreenOn !== false &&
+      Timer.isRunning(cur) &&
+      (cur.phase === "focus" || cur.phase === "break")
+    );
+  }
+
+  function syncScreenLock() {
+    if (wanted()) ScreenLock.acquire();
+    else ScreenLock.release();
+  }
+
   const Notify = {
+    last: null,
     supported() {
       return "Notification" in window;
     },
@@ -539,15 +631,29 @@
     },
     show(title, body) {
       if (this.permission() !== "granted") return;
+      // tag は付けない。同じ tag だと、前の通知が通知センターに残っているときに
+      // Chrome / Edge が新しい通知をバナーを出さずに差し替えてしまうため。
+      this.closeLast();
       try {
-        const n = new window.Notification(title, { body, tag: "coachingl-pomodoro" });
+        const n = new window.Notification(title, { body });
         n.onclick = () => {
           window.focus();
           n.close();
         };
+        this.last = n;
       } catch (e) {
         /* Android Chrome などは new Notification に対応していない */
       }
+    },
+    /** 前の通知を片付ける（ページに戻ってきたときや、次の通知を出す前） */
+    closeLast() {
+      if (!this.last) return;
+      try {
+        this.last.close();
+      } catch (e) {
+        /* 何もしない */
+      }
+      this.last = null;
     },
   };
 
@@ -608,6 +714,13 @@
     el.breakMinutes = $("#break-minutes");
     el.notifyBtn = $("#notify-btn");
     el.notifyStatus = $("#notify-status");
+    el.notifyTestBtn = $("#notify-test-btn");
+    el.notifyTestStatus = $("#notify-test-status");
+    el.notifyOsHint = $("#notify-os-hint");
+    el.keepScreen = $("#keep-screen");
+    el.keepScreenRow = $("#keep-screen-row");
+    el.keepScreenHint = $("#keep-screen-hint");
+    el.reviewNotice = $("#review-notice");
     el.focusView = $('[data-view="focus"]');
     el.focusTime = $("#focus-time");
     el.focusIntention = $("#focus-intention");
@@ -660,6 +773,7 @@
     document.body.dataset.screen = name;
     const render = renderers[name];
     if (render) render(params || {});
+    syncScreenLock();
     updateDocumentTitle(Date.now());
     window.scrollTo(0, 0);
     // 画面が切り替わったことを支援技術に伝えるため、見出しへフォーカスを移す
@@ -681,6 +795,7 @@
       if (!preset) el.workCustom.value = String(settings.workMinutes);
       renderWorkChoice();
       renderBreakSetting();
+      renderScreenSetting();
       renderNotifyStatus();
       el.startNotice.hidden = !params.notice;
       el.startNotice.textContent = params.notice || "";
@@ -703,15 +818,13 @@
     },
     review() {
       const cur = Store.state.current;
-      const review = (cur && cur.review) || {};
       el.reviewIntention.textContent = cur && cur.intention ? t("reviewIntention", { text: cur.intention }) : "";
       el.reviewIntention.hidden = !(cur && cur.intention);
-      el.focusChips.forEach((b) => {
-        b.setAttribute("aria-pressed", String(Number(b.dataset.focus) === review.focus));
-      });
-      el.feelingChips.querySelectorAll("[data-feeling]").forEach((b) => {
-        b.setAttribute("aria-pressed", String(b.dataset.feeling === review.feeling));
-      });
+      // 画面を離れている間に終わっていたときは、いつ終わったかを添える
+      const late = cur && typeof cur.finishedLateAt === "number";
+      el.reviewNotice.hidden = !late;
+      el.reviewNotice.textContent = late ? t("finishedWhileAway", { time: formatTimeOfDay(cur.finishedLateAt) }) : "";
+      renderReviewChoices();
     },
     break() {
       const cur = Store.state.current;
@@ -723,6 +836,18 @@
       renderLog();
     },
   };
+
+  /** 振り返りの選択状態だけを描き直す（選ぶたびに呼ぶ） */
+  function renderReviewChoices() {
+    const cur = Store.state.current;
+    const review = (cur && cur.review) || {};
+    el.focusChips.forEach((b) => {
+      b.setAttribute("aria-pressed", String(Number(b.dataset.focus) === review.focus));
+    });
+    el.feelingChips.querySelectorAll("[data-feeling]").forEach((b) => {
+      b.setAttribute("aria-pressed", String(b.dataset.feeling === review.feeling));
+    });
+  }
 
   function renderWorkChoice() {
     el.workChips.forEach((chip) => {
@@ -743,10 +868,19 @@
   function renderNotifyStatus() {
     const p = Notify.permission();
     el.notifyBtn.hidden = p !== "default";
+    el.notifyTestBtn.hidden = p !== "granted";
+    el.notifyOsHint.hidden = p !== "granted";
     if (p === "granted") el.notifyStatus.textContent = t("notifyOn");
     else if (p === "denied") el.notifyStatus.textContent = t("notifyDenied");
     else if (p === "unsupported") el.notifyStatus.textContent = t("notifyUnsupported");
     else el.notifyStatus.textContent = "";
+  }
+
+  function renderScreenSetting() {
+    const supported = ScreenLock.supported();
+    el.keepScreenRow.hidden = !supported;
+    el.keepScreen.checked = Store.state.settings.keepScreenOn !== false;
+    el.keepScreenHint.textContent = supported ? t("keepScreenHint") : t("keepScreenUnsupported");
   }
 
   /** 残り時間の表示とタブのタイトルを更新する（毎回 endAt から計算） */
@@ -880,6 +1014,7 @@
       startTicking();
     }
     renderers.focus();
+    syncScreenLock();
     updateDocumentTitle(now);
   }
 
@@ -933,6 +1068,8 @@
       endAt: null,
       remainingMs: null,
       review: { focus: null, feeling: null },
+      // 終了から1分以上たって気づいた（画面ロック中だった・再読み込みした）ときの終了時刻
+      finishedLateAt: Date.now() - endedAt > 60 * 1000 ? endedAt : null,
     });
     showView("review");
     if (!silent) {
@@ -947,7 +1084,7 @@
     const review = Object.assign({ focus: null, feeling: null }, cur.review);
     review[field] = review[field] === value ? null : value; // もう一度押すと選択を外す
     Store.updateCurrent({ review });
-    renderers.review();
+    renderReviewChoices();
   }
 
   function saveReviewAndBreak() {
@@ -1023,6 +1160,19 @@
       Store.updateSettings({ breakMinutes: n });
     }
     renderBreakSetting();
+  }
+
+  function testNotify() {
+    el.notifyTestStatus.textContent = t("notifyTestSent");
+    setTimeout(() => {
+      Notify.show(t("notifyTestTitle"), t("notifyTestBody"));
+      el.notifyTestStatus.textContent = "";
+    }, 5000);
+  }
+
+  function setKeepScreen() {
+    Store.updateSettings({ keepScreenOn: el.keepScreen.checked });
+    syncScreenLock();
   }
 
   function requestNotify() {
@@ -1121,6 +1271,9 @@
         case "clear-all":
           clearAll();
           break;
+        case "test-notify":
+          testNotify();
+          break;
         case "request-notify":
           requestNotify();
           break;
@@ -1130,6 +1283,7 @@
     });
 
     el.breakMinutes.addEventListener("change", setBreakMinutes);
+    el.keepScreen.addEventListener("change", setKeepScreen);
     el.workCustom.addEventListener("input", () => {
       el.customHint.textContent = t("customHint");
       el.customHint.classList.remove("hint-warn");
@@ -1137,15 +1291,26 @@
       if (n != null) Store.updateSettings({ workMinutes: n });
     });
 
-    // ユーザー操作のたびに音の再生制限を解除しておく（再読み込み後でもチャイムが鳴るように）
-    ["pointerdown", "keydown"].forEach((type) => {
-      document.addEventListener(type, () => Sound.unlock(), { passive: true });
+    // ユーザー操作のたびに、音の再生制限の解除と画面ロック防止の取り直しをしておく
+    // （再読み込み後やタブに戻ったあとでもチャイムが鳴るように）。
+    // スマホのタッチでは pointerdown は「ユーザー操作」に数えられないので、pointerup / touchend も使う。
+    ["pointerdown", "pointerup", "touchend", "keydown", "click"].forEach((type) => {
+      document.addEventListener(
+        type,
+        () => {
+          Sound.unlock();
+          syncScreenLock();
+        },
+        { passive: true }
+      );
     });
 
     // タブに戻ったとき・ページが復帰したときは、終了予定時刻から計算し直す
     const recalc = () => {
       if (document.hidden) return;
+      Notify.closeLast(); // 戻ってきたので、残っている通知は片付ける
       if (Timer.isRunning(Store.state.current)) startTicking();
+      syncScreenLock();
     };
     document.addEventListener("visibilitychange", recalc);
     window.addEventListener("pageshow", recalc);
