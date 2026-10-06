@@ -19,6 +19,7 @@
 4. **休憩**：休憩タイマーと、身体を休めるひとことが表示されます。時間になるか、「スタートにもどる」を押すとスタートに戻ります。
    ひとことは20種類あり、トランプを切るように順番を混ぜて出すので、20種類を一巡するまで同じ文は出ません。文は `app.js` の `breakPrompts` に書き足せます。
 5. **今日の記録**：スタート画面の「今日の記録」から、今日のセッション一覧と、合計回数・合計集中時間を見られます。
+6. **表示の切り替え**：「設定」の「表示」で、自動／ライト／ダークを選べます。「自動」はスマホやパソコンの表示設定に合わせます。
 
 ### ちょっとした仕様
 
@@ -80,15 +81,15 @@ python3 -m http.server 8000
 
 更新するときは、`main` に変更を反映するだけで、自動的に公開内容も更新されます。
 
-`style.css` や `app.js` を変えたときは、`index.html` の `style.css?v=5` / `app.js?v=5` の数字を1つ上げてください。
+`style.css` や `app.js` を変えたときは、`index.html` の `style.css?v=6` / `app.js?v=6` の数字を1つ上げてください。
 GitHub Pages ではファイルがブラウザに10分ほど保存されるため、数字を上げないと、新しい `index.html` と古い `app.js` が組み合わさって表示が崩れることがあります。
 
 ## ファイル構成
 
 ```
 index.html   画面の骨組み（文言は app.js から差し込みます）
-icons/       ファビコンとホーム画面用アイコン（COACHING-L のロゴ）
-style.css    見た目（スマホ優先・ライト／ダーク対応）
+icons/       ロゴ画像（ファビコン・ホーム画面用アイコン・スタート画面のロゴ）
+style.css    見た目（スマホ優先・ライト／ダーク対応。色は coaching-l.net のブランドカラーに合わせる）
 app.js       動きと文言のすべて
 SPEC.md      MVP の仕様書
 README.md    このファイル
@@ -112,7 +113,7 @@ README.md    このファイル
 ```js
 {
   version: 1,
-  settings: { workMinutes, breakMinutes, keepScreenOn },  // keepScreenOn は未設定なら端末の種類で決まる
+  settings: { workMinutes, breakMinutes, keepScreenOn, theme },  // keepScreenOn は未設定なら端末の種類で決まる。theme は "auto" | "light" | "dark"
   sessions: [{
     id, startedAt, endedAt,          // 時刻はミリ秒（epoch）
     plannedMinutes, intention,

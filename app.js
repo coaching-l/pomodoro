@@ -51,6 +51,11 @@
       openLog: "今日の記録",
       settingsTitle: "設定",
       breakLabel: "休憩時間",
+      themeLabel: "表示",
+      themeAuto: "自動",
+      themeLight: "ライト",
+      themeDark: "ダーク",
+      themeHint: "「自動」は、スマホやパソコンの表示設定（ライト／ダーク）に合わせます。",
       breakHint: "1〜30分",
       screenLabel: "画面",
       keepScreenLabel: "タイマーの間は、画面をつけたままにする",
@@ -376,6 +381,40 @@
     Store.setPromptDeck(remaining, index);
     return index;
   }
+
+  // ==========================================================================
+  // 3.5 表示テーマ（自動／ライト／ダーク）
+  //     html 要素の data-theme で切り替える。「自動」のときは属性を付けず、端末の設定に合わせる。
+  // ==========================================================================
+
+  const THEMES = ["auto", "light", "dark"];
+  const THEME_COLORS = { light: "#f7f8fa", dark: "#02172f" }; // ブラウザ上部の帯の色（style.css の --bg と同じ）
+
+  function normalizeTheme(v) {
+    return THEMES.indexOf(v) >= 0 ? v : "auto";
+  }
+
+  function applyTheme(value) {
+    const theme = normalizeTheme(value);
+    const root = document.documentElement;
+    if (theme === "auto") delete root.dataset.theme;
+    else root.dataset.theme = theme;
+    document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
+      const forDark = /dark/.test(m.getAttribute("media") || "");
+      const scheme = theme === "auto" ? (forDark ? "dark" : "light") : theme;
+      m.setAttribute("content", THEME_COLORS[scheme]);
+    });
+  }
+
+  // 画面がちらつかないよう、読み込みの最初（画面を描く前）に保存済みのテーマだけ反映しておく
+  (function applySavedThemeEarly() {
+    try {
+      const data = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "null");
+      applyTheme(data && data.settings && data.settings.theme);
+    } catch (e) {
+      /* 保存を読めなくても、端末の設定どおりに表示される */
+    }
+  })();
 
   // ==========================================================================
   // 4. 時間の計算
@@ -906,6 +945,7 @@
       if (!preset) el.workCustom.value = String(settings.workMinutes);
       renderWorkChoice();
       renderBreakSetting();
+      renderThemeSetting();
       renderScreenSetting();
       renderNotifyStatus();
       el.startNotice.hidden = !params.notice;
@@ -968,6 +1008,13 @@
     el.customRow.hidden = selectedWork !== "custom";
     el.customHint.textContent = t("customHint");
     el.customHint.classList.remove("hint-warn");
+  }
+
+  function renderThemeSetting() {
+    const theme = normalizeTheme(Store.state.settings.theme);
+    document.querySelectorAll("[data-theme-choice]").forEach((b) => {
+      b.setAttribute("aria-pressed", String(b.dataset.themeChoice === theme));
+    });
   }
 
   function renderBreakSetting() {
@@ -1349,6 +1396,13 @@
       const target = e.target.closest("[data-action]");
       if (!target) return;
       switch (target.dataset.action) {
+        case "select-theme": {
+          const theme = normalizeTheme(target.dataset.themeChoice);
+          Store.updateSettings({ theme });
+          applyTheme(theme);
+          renderThemeSetting();
+          break;
+        }
         case "select-work": {
           const v = target.dataset.work;
           selectedWork = v === "custom" ? "custom" : Number(v);
@@ -1438,6 +1492,8 @@
       if (e.key !== STORAGE_KEY && e.key !== null) return;
       const before = JSON.stringify(Store.state.current);
       Store.load();
+      applyTheme(Store.state.settings.theme);
+      renderThemeSetting();
       if (JSON.stringify(Store.state.current) !== before) restore();
       else if (currentView === "log") renderLog();
     });
@@ -1448,6 +1504,7 @@
     applyI18n(document);
     buildStaticParts();
     Store.load();
+    applyTheme(Store.state.settings.theme);
     Notify.init();
     bindEvents();
     restore();
