@@ -15,10 +15,13 @@
   --accent-soft: #eaeef3;
   --accent-contrast: #ffffff;
   --gold: #c09e5c; /* 飾りの線 */
-  --gold-text: #98783d; /* 大きな文字に使う金 */
+  --gold-text: #98783d; /* 大きな文字（24px 以上）に使う金 */
+  --gold-label: #7a5f2c; /* 小さな文字に使う金（背景に対して 4.5:1 以上） */
   --gold-soft: #faf6ec;
-  --border: #d3dae2; /* 入力欄・ボタンの枠 */
-  --line: #e0e5ea; /* 区切り線 */
+  --border: #d3dae2; /* ボタンの枠 */
+  --input-border: #808c99; /* 入力欄の枠（背景に対して 3:1 以上） */
+  --line: #e0e5ea; /* 区切り線・カードの枠 */
+  --focus-halo: rgba(192, 158, 92, 0.22); /* 入力欄を選んだときの金の淡い光（ホームページと同じ） */
   --badge-done-bg: #e6ecf3;
   --badge-done-text: #042143;
   --badge-rest-bg: #faf6ec;
@@ -26,10 +29,10 @@
   --focus-ring: #98783d;
   --warn-text: #7a5f2c;
 
-  --radius: 14px;
-  --radius-small: 10px;
+  --radius: 10px; /* カード（ホームページと同じ） */
+  --radius-small: 8px; /* ボタン・入力欄（ホームページと同じ） */
   --radius-pill: 999px;
-  --shadow: 0 8px 24px rgba(2, 23, 47, 0.07);
+  --shadow: 0 8px 24px rgba(2, 23, 47, 0.08);
   --font: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Noto Sans JP", "Hiragino Sans",
     "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Yu Gothic", "Meiryo", system-ui, sans-serif;
 
@@ -51,9 +54,12 @@
     --accent-contrast: #02172f;
     --gold: #c09e5c;
     --gold-text: #d6bd8a;
+    --gold-label: #d6bd8a;
     --gold-soft: #2a2a24;
     --border: #24476b;
+    --input-border: #557699;
     --line: #1a3a5c;
+    --focus-halo: var(--accent-soft);
     --badge-done-bg: #133a5e;
     --badge-done-text: #dbe5f0;
     --badge-rest-bg: #3a3221;
@@ -296,7 +302,7 @@ legend.field-label {
   width: 100%;
   min-height: 56px;
   padding: 12px 16px;
-  border: 1.5px solid var(--border);
+  border: 1.5px solid var(--input-border);
   border-radius: var(--radius-small);
   background: var(--surface);
   font-size: 1.0625rem;
@@ -309,11 +315,17 @@ legend.field-label {
   opacity: 0.8;
 }
 
+.text-input:hover,
+.number-input:hover {
+  border-color: var(--heading);
+}
+
+/* 選んだ入力欄は、ホームページと同じく金の枠と淡い光 */
 .text-input:focus,
 .number-input:focus {
-  border-color: var(--accent);
+  border-color: var(--focus-ring);
   outline: none;
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  box-shadow: 0 0 0 3px var(--focus-halo);
 }
 
 .custom-row {
@@ -584,13 +596,14 @@ legend.field-label {
 .phase-label {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--gold-text);
+  color: var(--gold-label);
   letter-spacing: 0.2em;
 }
 
 .prompt {
   padding: 18px 20px;
-  border-top: 3px solid var(--gold);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--gold); /* 1px の枠より後に書く（ホームページのカードと同じ組み方） */
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: var(--shadow);
@@ -603,6 +616,8 @@ legend.field-label {
 .message {
   color: var(--heading);
   text-wrap: balance;
+  word-break: auto-phrase;
+  line-break: strict;
   font-size: 1.25rem;
   font-weight: 500;
   line-height: 1.8;
@@ -634,6 +649,7 @@ legend.field-label {
   flex-direction: column;
   gap: 4px;
   padding: 16px 18px;
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: var(--shadow);
@@ -669,6 +685,7 @@ legend.field-label {
   flex-direction: column;
   gap: 8px;
   padding: 16px 18px;
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: var(--shadow);
