@@ -16,6 +16,8 @@
 <body>
   <div class="app">
     <main>
+      <!-- 再読み込み後、画面に一度触れてもらうための案内。レイアウトをずらさないよう画面上部に重ねて出す -->
+      <p class="notice touch-hint" id="touch-hint" role="status" data-i18n="touchHint" hidden></p>
       <noscript><p class="notice">このページを使うには JavaScript を有効にしてください。</p></noscript>
 
       <!-- 1. スタート -->
@@ -67,10 +69,21 @@
                 </div>
               </div>
               <div class="field">
+                <span class="field-label" data-i18n="screenLabel"></span>
+                <label class="toggle" id="keep-screen-row">
+                  <input type="checkbox" id="keep-screen" aria-describedby="keep-screen-hint">
+                  <span data-i18n="keepScreenLabel"></span>
+                </label>
+                <p class="hint" id="keep-screen-hint"></p>
+              </div>
+              <div class="field">
                 <span class="field-label" data-i18n="notifyLabel"></span>
                 <button type="button" class="btn btn-secondary" id="notify-btn" data-action="request-notify" data-i18n="notifyButton"></button>
                 <p class="hint" id="notify-status" aria-live="polite"></p>
-                <p class="hint" data-i18n="notifyNote"></p>
+                <button type="button" class="btn btn-secondary" id="notify-test-btn" data-action="test-notify" data-i18n="notifyTest" hidden></button>
+                <p class="hint" id="notify-test-status" aria-live="polite"></p>
+                <p class="hint" id="notify-os-hint" data-i18n="notifyOsHint" hidden></p>
+                <p class="hint" id="notify-note" data-i18n="notifyNote"></p>
               </div>
             </div>
           </details>
@@ -102,6 +115,7 @@
       <section class="view" data-view="review" hidden>
         <h2 class="lead" tabindex="-1" data-i18n="reviewTitle"></h2>
         <p class="recap" id="review-intention"></p>
+        <p class="notice notice-muted" id="review-notice" hidden></p>
 
         <fieldset class="field">
           <legend class="field-label" data-i18n="focusQuestion"></legend>

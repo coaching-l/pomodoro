@@ -222,6 +222,21 @@ legend.field-label {
   font-size: 0.9375rem;
 }
 
+/* 画面上部に重ねて出す案内（表示・非表示でボタンの位置が動かないように） */
+.touch-hint {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  left: 16px;
+  right: 16px;
+  z-index: 10;
+  max-width: 448px;
+  margin: 0 auto;
+  box-shadow: var(--shadow);
+  text-align: center;
+  text-wrap: balance;
+  word-break: auto-phrase;
+}
+
 .notice-muted {
   background: var(--surface-muted);
 }
@@ -460,6 +475,25 @@ legend.field-label {
 
 .settings .btn {
   align-self: flex-start;
+}
+
+/* オン・オフの切り替え（チェックボックス） */
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.toggle input {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
 }
 
 /* ---------- 集中・休憩 ---------- */
