@@ -987,6 +987,40 @@ legend.field-label {
   background: var(--surface);
 }
 
+/* バックアップの読み込み */
+.disclosure .copy-fallback {
+  padding-bottom: 4px;
+}
+
+.disclosure textarea {
+  font-size: 1rem; /* iPhone で貼り付けるときに画面が拡大されないように 16px 以上 */
+}
+
+.import-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.import-preview-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  word-break: auto-phrase;
+}
+
+.import-will-add {
+  font-weight: 600;
+}
+
+.import-kept-item {
+  padding-left: 10px;
+  border-left: 2px solid var(--line);
+  font-size: 0.875rem;
+  white-space: pre-line; /* ふりかえりの改行をそのまま */
+  user-select: text;
+}
+
 .summary-line {
   font-size: 0.9375rem;
   word-break: auto-phrase;
@@ -1118,7 +1152,8 @@ legend.field-label {
   background: var(--chart-none);
 }
 
-.chart-table summary {
+.chart-table summary,
+.disclosure summary {
   display: flex;
   align-items: center;
   min-height: 44px;
@@ -1126,6 +1161,30 @@ legend.field-label {
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
+}
+
+.chart-table summary::-webkit-details-marker,
+.disclosure summary::-webkit-details-marker {
+  display: none;
+}
+
+/* 開け閉めできることが分かるように、小さな矢印を付ける（▸ 閉 → ▾ 開） */
+.chart-table summary::before,
+.disclosure summary::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin: 0 10px 0 2px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+}
+
+.chart-table[open] summary::before,
+.disclosure[open] summary::before {
+  transform: rotate(45deg);
 }
 
 .table-wrap {

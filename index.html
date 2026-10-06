@@ -14,10 +14,10 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-title" content="ポモドーロ" data-i18n-content="homeScreenTitle">
   <!-- ?v= は更新のたびに1つ上げる（ブラウザに古いファイルが残って、表示が崩れるのを防ぐ） -->
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=8">
   <!-- defer を付けない：選んだ表示（ライト／ダーク）を最初の描画より前に反映して、ちらつきを防ぐため。
        画面の部品を使う処理は、app.js の中で DOMContentLoaded を待ってから行う -->
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </head>
 <body>
   <div class="app">
@@ -278,6 +278,32 @@
             <p class="hint" id="all-text-hint" data-i18n="allTextHint"></p>
             <textarea class="text-input" id="all-text" rows="8" readonly aria-labelledby="all-text-hint"></textarea>
           </div>
+        </section>
+
+        <!-- バックアップの読み込み（今の記録に足す形だけ） -->
+        <section class="download-box" id="import-box">
+          <h3 class="section-title" data-i18n="importTitle"></h3>
+          <p class="hint" data-i18n="importLead"></p>
+          <!-- accept は付けない（iPhone では、付けると .json のファイルが選べなくなることがあるため） -->
+          <input type="file" class="visually-hidden" id="import-file" tabindex="-1" aria-hidden="true">
+          <button type="button" class="btn btn-secondary btn-block" id="import-btn" data-action="import-file" data-i18n="importFile"></button>
+          <p class="hint" data-i18n="importIphoneHint"></p>
+          <details class="disclosure" id="import-paste-box">
+            <summary data-i18n="importPasteTitle"></summary>
+            <div class="copy-fallback">
+              <p class="hint" id="import-paste-hint" data-i18n="importPasteHint"></p>
+              <textarea class="text-input" id="import-text" rows="5" spellcheck="false" autocomplete="off" aria-labelledby="import-paste-hint"></textarea>
+              <button type="button" class="btn btn-secondary btn-block btn-small" data-action="import-text" data-i18n="importPasteButton"></button>
+            </div>
+          </details>
+          <div class="notice import-preview" id="import-preview" tabindex="-1" hidden>
+            <div class="import-preview-text" id="import-preview-text"></div>
+            <div class="actions">
+              <button type="button" class="btn btn-primary btn-block" id="import-confirm" data-action="import-confirm" data-i18n="importConfirm"></button>
+              <button type="button" class="btn btn-ghost btn-block btn-small" id="import-cancel" data-action="import-cancel" data-i18n="importCancel"></button>
+            </div>
+          </div>
+          <p class="hint" id="import-status" role="status"></p>
         </section>
 
         <p class="hint hint-center" id="log-status" role="status"></p>
