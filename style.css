@@ -22,6 +22,15 @@
   --input-border: #808c99; /* 入力欄の枠（背景に対して 3:1 以上） */
   --line: #e0e5ea; /* 区切り線・カードの枠 */
   --focus-halo: rgba(192, 158, 92, 0.22); /* 入力欄を選んだときの金の淡い光（ホームページと同じ） */
+  /* グラフ：集中度 1〜5 を紺の濃淡で。灰色は未記入（良し悪しを赤や緑で表さない） */
+  --chart-1: #c9d4e0;
+  --chart-2: #9db0c6;
+  --chart-3: #6a84a3;
+  --chart-4: #34527a;
+  --chart-5: #042143;
+  --chart-none: #eceef1;
+  --chart-none-stroke: #aab3bd;
+  --chart-track: #f0f2f5;
   --badge-done-bg: #e6ecf3;
   --badge-done-text: #042143;
   --badge-rest-bg: #faf6ec;
@@ -61,6 +70,15 @@
     --input-border: #557699;
     --line: #1a3a5c;
     --focus-halo: var(--accent-soft);
+    /* グラフ：集中度 1〜5 を金の濃淡で */
+    --chart-1: #4a4436;
+    --chart-2: #6e6143;
+    --chart-3: #94804f;
+    --chart-4: #b7995b;
+    --chart-5: #e0c48a;
+    --chart-none: #1a3553;
+    --chart-none-stroke: #4f6f92;
+    --chart-track: #0f3152;
     --badge-done-bg: #133a5e;
     --badge-done-text: #dbe5f0;
     --badge-rest-bg: #3a3221;
@@ -90,6 +108,15 @@
   --input-border: #557699;
   --line: #1a3a5c;
   --focus-halo: var(--accent-soft);
+  /* グラフ：集中度 1〜5 を金の濃淡で */
+  --chart-1: #4a4436;
+  --chart-2: #6e6143;
+  --chart-3: #94804f;
+  --chart-4: #b7995b;
+  --chart-5: #e0c48a;
+  --chart-none: #1a3553;
+  --chart-none-stroke: #4f6f92;
+  --chart-track: #0f3152;
   --badge-done-bg: #133a5e;
   --badge-done-text: #dbe5f0;
   --badge-rest-bg: #3a3221;
@@ -141,6 +168,8 @@ body {
 p,
 h1,
 h2,
+h3,
+h4,
 ol,
 dl,
 dd,
@@ -825,4 +854,367 @@ legend.field-label {
   *::after {
     transition: none !important;
   }
+}
+
+/* ---------- 記録（日ごと・週ごと） ---------- */
+
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-small);
+  background: var(--surface-muted);
+}
+
+.tab {
+  min-height: 44px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.tab[aria-selected="true"] {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.period-nav {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.period-title {
+  color: var(--heading);
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  text-wrap: balance;
+  word-break: auto-phrase;
+}
+
+.nav-btn {
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+  color: var(--heading);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.link-btn {
+  align-self: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: var(--heading);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.period-summary {
+  color: var(--heading);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  text-wrap: pretty;
+  word-break: auto-phrase;
+}
+
+.resumed {
+  color: var(--text);
+  font-size: 0.9375rem;
+}
+
+.note-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 18px 18px;
+}
+
+.note-input {
+  min-height: 72px;
+  resize: vertical;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.copy-fallback {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.copy-fallback textarea {
+  font-size: 0.875rem;
+}
+
+.week-summary,
+.chart-box,
+.download-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.summary-line {
+  font-size: 0.9375rem;
+  word-break: auto-phrase;
+}
+
+.flow-meta {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.flow-text {
+  display: block;
+  color: var(--heading);
+}
+
+.flow-text.is-empty {
+  color: var(--text-muted);
+}
+
+.summary-total {
+  color: var(--text-muted);
+}
+
+.chart-title,
+.section-title {
+  padding-left: 10px;
+  border-left: 3px solid var(--gold);
+  color: var(--heading);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.chart-note {
+  font-size: 0.9375rem;
+}
+
+.chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.seg-f1 { fill: var(--chart-1); }
+.seg-f2 { fill: var(--chart-2); }
+.seg-f3 { fill: var(--chart-3); }
+.seg-f4 { fill: var(--chart-4); }
+.seg-f5 { fill: var(--chart-5); }
+
+.seg-none {
+  fill: var(--chart-none);
+  stroke: var(--chart-none-stroke);
+  stroke-width: 1;
+}
+
+.chart-track {
+  fill: var(--chart-track);
+}
+
+.chart-axis-line {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.chart-empty {
+  stroke: var(--input-border);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.chart-label {
+  fill: var(--text-muted);
+  font-size: 12px;
+}
+
+.chart-label.is-today {
+  fill: var(--heading);
+  font-weight: 700;
+}
+
+.chart-label.is-future {
+  opacity: 0.5;
+}
+
+.chart-value {
+  fill: var(--heading);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.band-row.is-few {
+  opacity: 0.45;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.swatch.seg-f1 { background: var(--chart-1); }
+.swatch.seg-f2 { background: var(--chart-2); }
+.swatch.seg-f3 { background: var(--chart-3); }
+.swatch.seg-f4 { background: var(--chart-4); }
+.swatch.seg-f5 { background: var(--chart-5); }
+
+.swatch.seg-none {
+  margin-left: 6px;
+  margin-right: 4px;
+  border: 1px solid var(--chart-none-stroke);
+  background: var(--chart-none);
+}
+
+.chart-table summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--heading);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.chart-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-table th,
+.chart-table td {
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--line);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.chart-table th[scope="row"],
+.chart-table tr:first-child th:first-child {
+  text-align: left;
+}
+
+.day-rows {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  list-style: none;
+}
+
+.day-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.day-row::after {
+  content: "›";
+  color: var(--text-muted);
+  font-size: 1.25rem;
+}
+
+.day-rows li:last-child .day-row {
+  border-bottom: 0;
+}
+
+.week-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.plain-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+}
+
+.plain-list li,
+.week-note {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+  overflow-wrap: anywhere;
+}
+
+.week-note + .week-note {
+  margin-top: 8px;
+}
+
+.week-note-date {
+  margin-bottom: 4px;
+  color: var(--heading);
+  font-size: 0.875rem;
+}
+
+.week-note-line {
+  font-size: 0.9375rem;
 }

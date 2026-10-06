@@ -14,10 +14,10 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-title" content="ポモドーロ" data-i18n-content="homeScreenTitle">
   <!-- ?v= は更新のたびに1つ上げる（ブラウザに古いファイルが残って、表示が崩れるのを防ぐ） -->
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=7">
   <!-- defer を付けない：選んだ表示（ライト／ダーク）を最初の描画より前に反映して、ちらつきを防ぐため。
        画面の部品を使う処理は、app.js の中で DOMContentLoaded を待ってから行う -->
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </head>
 <body>
   <div class="app">
@@ -172,21 +172,107 @@
         </div>
       </section>
 
-      <!-- 5. 今日の記録 -->
+      <!-- 5. 記録（日ごと・週ごと） -->
       <section class="view" data-view="log" hidden>
         <h2 class="lead" tabindex="-1" data-i18n="logTitle"></h2>
-        <div class="stats">
-          <div class="stat">
-            <span class="stat-label" data-i18n="logCount"></span>
-            <span class="stat-value" id="sum-count"></span>
+
+        <div class="tabs" role="tablist" data-i18n-aria-label="logTabsLabel">
+          <button type="button" class="tab" role="tab" id="tab-day" aria-controls="panel-day" aria-selected="true" data-action="log-tab" data-tab="day" data-i18n="tabDay"></button>
+          <button type="button" class="tab" role="tab" id="tab-week" aria-controls="panel-week" aria-selected="false" data-action="log-tab" data-tab="week" data-i18n="tabWeek"></button>
+        </div>
+
+        <!-- 日ごと -->
+        <div class="panel" role="tabpanel" id="panel-day" aria-labelledby="tab-day">
+          <div class="period-nav">
+            <button type="button" class="nav-btn" id="day-prev" data-action="day-prev" data-i18n="prevDay"></button>
+            <h3 class="period-title" id="day-title" aria-live="polite"></h3>
+            <button type="button" class="nav-btn" id="day-next" data-action="day-next" data-i18n="nextDay"></button>
           </div>
-          <div class="stat">
-            <span class="stat-label" data-i18n="logTotal"></span>
-            <span class="stat-value" id="sum-total"></span>
+          <button type="button" class="link-btn" id="day-today" data-action="day-today" data-i18n="toToday" hidden></button>
+          <p class="period-summary" id="day-summary"></p>
+          <p class="resumed" id="day-resumed" hidden></p>
+          <ol class="log-list" id="log-list"></ol>
+
+          <details class="settings note-box" id="note-box">
+            <summary data-i18n="noteTitle"></summary>
+            <div class="note-body">
+              <label class="field-label" for="note-good" data-i18n="noteGood"></label>
+              <textarea class="text-input note-input" id="note-good" data-note="good" rows="2" maxlength="200"></textarea>
+              <label class="field-label" for="note-next" data-i18n="noteNext"></label>
+              <textarea class="text-input note-input" id="note-next" data-note="next" rows="2" maxlength="200"></textarea>
+              <label class="field-label" for="note-moved" data-i18n="noteMoved"></label>
+              <textarea class="text-input note-input" id="note-moved" data-note="moved" rows="2" maxlength="200"></textarea>
+              <p class="hint" id="note-status" role="status"></p>
+            </div>
+          </details>
+
+          <button type="button" class="btn btn-secondary btn-block" data-action="copy-day" data-i18n="copyDay"></button>
+          <p class="hint hint-center" id="copy-status" role="status"></p>
+          <div class="copy-fallback" id="copy-fallback" hidden>
+            <p class="hint" data-i18n="copyFallbackHint"></p>
+            <textarea class="text-input" id="copy-text" rows="8" readonly></textarea>
           </div>
         </div>
-        <p class="empty" id="log-empty" data-i18n="logEmpty" hidden></p>
-        <ol class="log-list" id="log-list"></ol>
+
+        <!-- 週ごと -->
+        <div class="panel" role="tabpanel" id="panel-week" aria-labelledby="tab-week" hidden>
+          <div class="period-nav">
+            <button type="button" class="nav-btn" id="week-prev" data-action="week-prev" data-i18n="prevWeek"></button>
+            <h3 class="period-title" id="week-title" aria-live="polite"></h3>
+            <button type="button" class="nav-btn" id="week-next" data-action="week-next" data-i18n="nextWeek"></button>
+          </div>
+          <button type="button" class="link-btn" id="week-today" data-action="week-today" data-i18n="toThisWeek" hidden></button>
+
+          <div class="week-summary" id="week-summary"></div>
+
+          <figure class="chart-box">
+            <figcaption class="chart-title" data-i18n="chartDailyTitle"></figcaption>
+            <div class="chart" id="chart-daily"></div>
+            <p class="chart-legend" id="legend-daily"></p>
+          </figure>
+          <ol class="day-rows" id="day-rows"></ol>
+
+          <figure class="chart-box">
+            <figcaption class="chart-title" data-i18n="chartBandsTitle"></figcaption>
+            <p class="chart-note" id="bands-note"></p>
+            <div class="chart" id="chart-bands"></div>
+            <p class="chart-legend" id="legend-bands"></p>
+            <details class="chart-table" id="bands-table-box">
+              <summary data-i18n="showNumbers"></summary>
+              <div class="table-wrap"><table id="bands-table"></table></div>
+            </details>
+          </figure>
+
+          <section class="week-section" id="flow-section" hidden>
+            <h3 class="section-title" data-i18n="flowTitle"></h3>
+            <ol class="plain-list" id="flow-list"></ol>
+          </section>
+
+          <section class="week-section" id="week-notes-section" hidden>
+            <h3 class="section-title" data-i18n="weekNotesTitle"></h3>
+            <div id="week-notes"></div>
+          </section>
+
+          <section class="week-section questions">
+            <h3 class="section-title" data-i18n="questionsTitle"></h3>
+            <p data-i18n="questionUse"></p>
+            <p data-i18n="questionPlace"></p>
+            <p class="hint" data-i18n="questionsHint"></p>
+          </section>
+        </div>
+
+        <!-- 記録のダウンロード（どちらのタブにも出す） -->
+        <section class="download-box">
+          <h3 class="section-title" data-i18n="downloadTitle"></h3>
+          <div class="actions">
+            <button type="button" class="btn btn-secondary btn-block" data-action="download-csv" data-i18n="downloadCsv"></button>
+            <button type="button" class="btn btn-secondary btn-block" data-action="download-json" data-i18n="downloadJson"></button>
+          </div>
+          <p class="hint" data-i18n="downloadNote"></p>
+          <p class="hint" data-i18n="downloadTrouble"></p>
+          <p class="hint" id="download-status" role="status"></p>
+        </section>
+
         <p class="hint hint-center" id="log-status" role="status"></p>
         <div class="actions">
           <button type="button" class="btn btn-primary btn-block" data-action="go-start" data-i18n="back"></button>

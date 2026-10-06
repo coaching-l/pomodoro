@@ -8,7 +8,7 @@
  *   3. 保存（Store）
  *   4. 時間の計算（Timer）
  *   5. チャイムと通知（Sound / Notify）
- *   6. 集計（summarizeToday）
+ *   6. 集計（日付の扱い・summarizeDay / summarizeRange / summarizeBands）
  *   7. 画面の描画（render* / showView）
  *   8. 画面遷移のアクション
  *   9. イベント登録と起動（restore）
@@ -48,7 +48,7 @@
       customInvalid: "5〜60の数字を入れてください",
       breakSummary: "休憩は {n}分（設定で変えられます）",
       startButton: "はじめる",
-      openLog: "今日の記録",
+      openLog: "記録",
       settingsTitle: "設定",
       breakLabel: "休憩時間",
       themeLabel: "表示",
@@ -105,12 +105,84 @@
       breakTitle: "休憩",
       endBreak: "スタートにもどる",
 
-      // 今日の記録
-      logTitle: "今日の記録",
-      logCount: "回数",
-      logTotal: "合計集中時間",
+      // 記録（日ごと・週ごと）
+      logTitle: "記録",
+      logTabsLabel: "記録の表示",
+      tabDay: "日ごと",
+      tabWeek: "週ごと",
       countUnit: "{n}回",
-      logEmpty: "今日の記録はまだありません。",
+      prevDay: "‹ 前の日",
+      nextDay: "次の日 ›",
+      prevWeek: "‹ 前の週",
+      nextWeek: "次の週 ›",
+      toToday: "今日へ",
+      toThisWeek: "今週へ",
+      dayToday: "今日",
+      dayYesterday: "昨日",
+      dayBefore: "おととい",
+      weekdays: ["日", "月", "火", "水", "木", "金", "土"],
+      dateLabel: "{m}月{d}日（{w}）",
+      dateLabelYear: "{y}年{m}月{d}日（{w}）",
+      relativeDate: "{rel} {date}",
+      weekRange: "{from}〜{to}",
+      daySummary: "{count}回・{duration}、集中の時間をとりました",
+      dayNoRecord: "この日の記録はありません",
+      resumedLine: "中断のあと、また始められた：{n}回",
+      noteTitle: "この日のふりかえり（書かなくてもだいじょうぶです）",
+      noteGood: "よかったこと",
+      noteNext: "次に試したいこと",
+      noteMoved: "気持ちが動いたこと（よいことでも、そうでなくても）",
+      noteSaved: "保存しました",
+      copyDay: "この日をコピー",
+      copied: "コピーしました。LINE などに貼り付けられます",
+      copyFallbackHint: "下の文章を長押し（または選択）してコピーしてください",
+      weekSummary: "この週は{count}回・{duration}、集中の時間をとりました。",
+      weekResumed: "中断のあと、また始められたのは{n}回でした。",
+      weekNoRecord: "この週の記録はありません。",
+      focusBreakdown: "集中度の内訳：{list}",
+      focusItem: "{level}が{n}回",
+      focusUnrated: "（未記入{n}回）",
+      feelingBreakdown: "気分：{list}",
+      feelingItem: "{label}{n}回",
+      listSep: "・",
+      totalSinceStart: "はじめてからの合計：{count}回・{duration}",
+      chartDailyTitle: "日ごとの集中の時間",
+      chartBandsTitle: "集中しやすい時間帯（ここ4週間）",
+      legendFocus: "濃さは集中度（散りがち 1 → 5 没頭できた）。灰色は未記入",
+      minutesShort: "{n}分",
+      dayRow: "{date}　{count}回・{minutes}分",
+      dayRowEmpty: "{date}　—",
+      bandsNotEnough: "記録がたまると、ここに集中しやすい時間帯が見えてきます",
+      bandsFew: "記録がまだ少ない",
+      bandsObserve: "ここ4週間では、{bands}でした",
+      bandsObserveItem: "{band}は{total}回のうち{high}回が集中度4〜5",
+      bandsObserveJoin: "、",
+      bandsMost: "ここ4週間は、{band}に始めた回がいちばん多くありました（{n}回）",
+      bandLabels: ["早朝（5〜8時）", "午前（8〜12時）", "昼（12〜14時）", "午後（14〜18時）", "夕方〜夜（18〜22時）", "深夜（22〜5時）"],
+      showNumbers: "数字で見る",
+      tableBand: "時間帯",
+      tableCount: "回数",
+      tableUnrated: "未記入",
+      flowTitle: "没頭できた時間",
+      flowMeta: "{date} {time}・{minutes}分",
+      weekNotesTitle: "この週のふりかえり",
+      questionsTitle: "ふりかえりの問い",
+      questionUse: "この週、時間をうまく使えたと感じる場面は？",
+      questionPlace: "来週、大切なこと（急ぎではないけれど大事なこと）を、どの時間帯に置いてみますか？",
+      questionsHint: "答えは書かなくてだいじょうぶです。思い浮かべるだけでも。",
+      downloadTitle: "記録のダウンロード",
+      downloadCsv: "表計算ソフト用（CSV）",
+      downloadJson: "すべてのデータ（JSON）",
+      downloadNote: "ファイルはこの端末に保存されます。アプリから外部へ送信することはありません。やることやふりかえりの文章も入るので、渡す相手はご自身で選んでください。",
+      downloadTrouble: "うまくダウンロードできないとき（LINE の中で開いたときなど）は、Safari や Chrome で開き直すか、日ごとの「この日をコピー」を使ってください。",
+      downloaded: "ダウンロードしました：{name}",
+      csvHeaders: ["日付", "曜日", "開始", "終了", "やること", "区切り", "集中した時間（分）", "予定（分）", "集中度", "気分", "記録ID"],
+      copyHeader: "【{date}の記録】",
+      copyFocus: "集中度{n}",
+      copyInterrupted: "（中断）",
+      copyNoteGood: "よかったこと",
+      copyNoteNext: "次に試したいこと",
+      copyNoteMoved: "気持ちが動いたこと",
       logDuration: "時間",
       logPlanned: "（予定 {n}分）",
       logFocus: "集中度",
@@ -123,7 +195,7 @@
       hoursMinutes: "{h}時間{m}分",
       back: "もどる",
       clearAll: "すべての記録を消す",
-      clearConfirm: "すべての記録を消します。元には戻せません。よろしいですか？",
+      clearConfirm: "すべての記録とふりかえりを消します。元には戻せません。先に「記録のダウンロード」で保存しておくこともできます。よろしいですか？",
       cleared: "記録を消しました",
 
       // 通知
@@ -224,6 +296,24 @@
     breakMin: 1,
     breakMax: 30,
     feelings: ["refreshed", "fulfilled", "neutral", "tired", "foggy", "rushed"],
+    // 記録とふりかえり
+    weekStartsOn: 1, // 月曜はじまり
+    // 時間帯の区切り（始めた時刻で分ける）。[開始, 終了) の時。最後は日をまたぐ
+    timeBands: [
+      [5, 8],
+      [8, 12],
+      [12, 14],
+      [14, 18],
+      [18, 22],
+      [22, 5],
+    ],
+    trendWindowDays: 28, // 「集中しやすい時間帯」を数える日数
+    trendMinRated: 10, // 集中度つきの記録がこの回数たまるまでは図を出さない
+    trendMinDays: 3, // …かつ、この日数分
+    bandMinCount: 3, // これ未満の時間帯は薄く描く
+    flowFocusLevels: [5], // 「没頭できた時間」に載せる集中度
+    flowMax: 5,
+    noteMaxLength: 200,
   });
 
   function loadConfig() {
@@ -253,11 +343,14 @@
       };
     }
 
-    /** 保存データを現在の形式にそろえる（形式を変えるときはここに移行処理を足す） */
+    /**
+     * 保存データを現在の形式にそろえる（形式を変えるときはここに移行処理を足す）。
+     * 知らない項目は捨てずに残す（新しい版で足した項目を、古い版で消してしまわないように）。
+     */
     function migrate(data) {
       const base = blank();
       if (!data || typeof data !== "object") return base;
-      return {
+      return Object.assign({}, data, {
         version: SCHEMA_VERSION,
         settings: Object.assign(base.settings, isObject(data.settings) ? data.settings : {}),
         sessions: Array.isArray(data.sessions) ? data.sessions.filter(isObject) : [],
@@ -268,7 +361,7 @@
               last: Number.isInteger(data.promptDeck.last) ? data.promptDeck.last : null,
             }
           : base.promptDeck,
-      };
+      });
     }
 
     function load() {
@@ -340,6 +433,81 @@
       setPromptDeck(remaining, last) {
         state.promptDeck = { remaining, last };
         save();
+      },
+    };
+  })();
+
+  /**
+   * 一日のふりかえり。本体とは別のキーに保存する
+   * （開いたままの古い版のタブが本体を保存し直しても、ふりかえりが消えないように）。
+   * 形：{ version: 1, days: { "YYYY-MM-DD": { good, next, moved, updatedAt } } }
+   */
+  const NOTES_KEY = "coachingl-pomodoro-notes-v1";
+  const NOTE_FIELDS = ["good", "next", "moved"];
+
+  const Notes = (function () {
+    let days = {};
+
+    function load() {
+      days = {};
+      try {
+        const data = JSON.parse(window.localStorage.getItem(NOTES_KEY) || "null");
+        if (isObject(data) && isObject(data.days)) {
+          Object.keys(data.days).forEach((key) => {
+            const d = data.days[key];
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || !isObject(d)) return;
+            const clean = {};
+            NOTE_FIELDS.forEach((f) => {
+              if (typeof d[f] === "string" && d[f]) clean[f] = d[f].slice(0, CONFIG.noteMaxLength);
+            });
+            if (Object.keys(clean).length) {
+              clean.updatedAt = Number(d.updatedAt) || 0;
+              days[key] = clean;
+            }
+          });
+        }
+      } catch (e) {
+        days = {};
+      }
+    }
+
+    function save() {
+      try {
+        window.localStorage.setItem(NOTES_KEY, JSON.stringify({ version: 1, days }));
+      } catch (e) {
+        /* 保存できなくても画面は続ける */
+      }
+    }
+
+    return {
+      load,
+      get(key) {
+        return days[key] || null;
+      },
+      all() {
+        return days;
+      },
+      set(key, field, value) {
+        const text = String(value || "").slice(0, CONFIG.noteMaxLength);
+        const d = Object.assign({}, days[key]);
+        if (text.trim()) d[field] = text;
+        else delete d[field];
+        const has = NOTE_FIELDS.some((f) => d[f]);
+        if (has) {
+          d.updatedAt = Date.now();
+          days[key] = d;
+        } else {
+          delete days[key];
+        }
+        save();
+      },
+      clear() {
+        days = {};
+        try {
+          window.localStorage.removeItem(NOTES_KEY);
+        } catch (e) {
+          /* 何もしない */
+        }
       },
     };
   })();
@@ -810,14 +978,61 @@
   //    「一日のまとめのコピー」など、今後の機能でも使い回せるよう画面から切り離しています。
   // ==========================================================================
 
-  function isSameLocalDay(ts, ref) {
-    const d = new Date(ts);
-    return (
-      d.getFullYear() === ref.getFullYear() &&
-      d.getMonth() === ref.getMonth() &&
-      d.getDate() === ref.getDate()
-    );
+  // ---- 日付（端末のローカル時刻。一日の区切りは0時） ----
+
+  function pad2(n) {
+    return String(n).padStart(2, "0");
   }
+
+  /** 時刻や Date を "YYYY-MM-DD" に */
+  function dateKey(t) {
+    const d = t instanceof Date ? t : new Date(t);
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+  }
+
+  /** "YYYY-MM-DD" をその日の0時の Date に */
+  function keyToDate(key) {
+    const [y, m, d] = key.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  function addDays(key, n) {
+    const d = keyToDate(key);
+    d.setDate(d.getDate() + n);
+    return dateKey(d);
+  }
+
+  /** その日を含む週のはじめ（CONFIG.weekStartsOn。月曜はじまり） */
+  function weekStartKey(key) {
+    const d = keyToDate(key);
+    const diff = (d.getDay() - CONFIG.weekStartsOn + 7) % 7;
+    return addDays(key, -diff);
+  }
+
+  function todayKey() {
+    return dateKey(new Date());
+  }
+
+  function formatDateLabel(key) {
+    const d = keyToDate(key);
+    const vars = { y: d.getFullYear(), m: d.getMonth() + 1, d: d.getDate(), w: t("weekdays")[d.getDay()] };
+    return d.getFullYear() === new Date().getFullYear() ? t("dateLabel", vars) : t("dateLabelYear", vars);
+  }
+
+  /** 「今日 10月6日（火）」「昨日 …」「おととい …」、それより前は日付だけ */
+  function formatDayTitle(key) {
+    const today = todayKey();
+    const rel =
+      key === today ? t("dayToday") : key === addDays(today, -1) ? t("dayYesterday") : key === addDays(today, -2) ? t("dayBefore") : "";
+    return rel ? t("relativeDate", { rel, date: formatDateLabel(key) }) : formatDateLabel(key);
+  }
+
+  function formatDateCsv(ts) {
+    const d = new Date(ts);
+    return d.getFullYear() + "/" + pad2(d.getMonth() + 1) + "/" + pad2(d.getDate());
+  }
+
+  // ---- 集計（画面・ファイル・コピーで同じものを使う） ----
 
   function sessionSeconds(s) {
     if (typeof s.focusedSeconds === "number") return s.focusedSeconds;
@@ -825,17 +1040,93 @@
     return Math.max(0, Math.round(((s.endedAt || 0) - (s.startedAt || 0)) / 1000));
   }
 
-  function summarizeToday(sessions, now) {
-    const ref = now || new Date();
-    const list = sessions
-      .filter((s) => typeof s.startedAt === "number" && isSameLocalDay(s.startedAt, ref))
+  function validSessions() {
+    return Store.state.sessions
+      .filter((s) => typeof s.startedAt === "number")
+      .slice()
       .sort((a, b) => a.startedAt - b.startedAt);
+  }
+
+  /** いちばん古い記録の日（記録がなければ今日） */
+  function earliestKey() {
+    const list = validSessions();
+    return list.length ? dateKey(list[0].startedAt) : todayKey();
+  }
+
+  /** 同じ日に、中断した回のあとに別の回を始めた数（中断1つにつき1） */
+  function countResumed(daySessions) {
+    let n = 0;
+    daySessions.forEach((s, i) => {
+      if (s.status === "interrupted" && i < daySessions.length - 1) n++;
+    });
+    return n;
+  }
+
+  /** 期間（from〜to の日付キー、両端を含む）の集計 */
+  function summarizeRange(fromKey, toKey) {
+    const list = validSessions().filter((s) => {
+      const k = dateKey(s.startedAt);
+      return k >= fromKey && k <= toKey;
+    });
+    const byDay = {};
+    list.forEach((s) => {
+      const k = dateKey(s.startedAt);
+      (byDay[k] = byDay[k] || []).push(s);
+    });
+    const focusCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, none: 0 };
+    const feelingCounts = {};
+    list.forEach((s) => {
+      if (s.focus >= 1 && s.focus <= 5) focusCounts[s.focus]++;
+      else focusCounts.none++;
+      if (s.feeling) feelingCounts[s.feeling] = (feelingCounts[s.feeling] || 0) + 1;
+    });
     return {
       sessions: list,
+      byDay,
       count: list.length,
-      completedCount: list.filter((s) => s.status === "completed").length,
       totalSeconds: list.reduce((sum, s) => sum + sessionSeconds(s), 0),
+      resumed: Object.keys(byDay).reduce((sum, k) => sum + countResumed(byDay[k]), 0),
+      focusCounts,
+      feelingCounts,
     };
+  }
+
+  function summarizeDay(key) {
+    const r = summarizeRange(key, key);
+    return { sessions: r.sessions, count: r.count, totalSeconds: r.totalSeconds, resumed: r.resumed };
+  }
+
+  function summarizeAll() {
+    const list = validSessions();
+    return { count: list.length, totalSeconds: list.reduce((sum, s) => sum + sessionSeconds(s), 0) };
+  }
+
+  /** 始めた時刻から時間帯の番号を返す（CONFIG.timeBands） */
+  function bandIndex(ts) {
+    const h = new Date(ts).getHours();
+    return CONFIG.timeBands.findIndex(([from, to]) => (from < to ? h >= from && h < to : h >= from || h < to));
+  }
+
+  /** 「集中しやすい時間帯」：endKey までの CONFIG.trendWindowDays 日分 */
+  function summarizeBands(endKey) {
+    const fromKey = addDays(endKey, -(CONFIG.trendWindowDays - 1));
+    const list = summarizeRange(fromKey, endKey).sessions;
+    const bands = CONFIG.timeBands.map(() => ({ total: 0, levels: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, none: 0 } }));
+    const ratedDays = new Set();
+    let rated = 0;
+    list.forEach((s) => {
+      const b = bands[bandIndex(s.startedAt)];
+      if (!b) return;
+      b.total++;
+      if (s.focus >= 1 && s.focus <= 5) {
+        b.levels[s.focus]++;
+        rated++;
+        ratedDays.add(dateKey(s.startedAt));
+      } else {
+        b.levels.none++;
+      }
+    });
+    return { bands, rated, ratedDays: ratedDays.size, enough: rated >= CONFIG.trendMinRated && ratedDays.size >= CONFIG.trendMinDays };
   }
 
   // ==========================================================================
@@ -882,12 +1173,43 @@
     el.feelingChips = $("#feeling-chips");
     el.breakTime = $("#break-time");
     el.breakPrompt = $("#break-prompt");
-    el.sumCount = $("#sum-count");
-    el.sumTotal = $("#sum-total");
     el.logList = $("#log-list");
-    el.logEmpty = $("#log-empty");
     el.logStatus = $("#log-status");
     el.clearBtn = $("#clear-btn");
+    el.tabDay = $("#tab-day");
+    el.tabWeek = $("#tab-week");
+    el.panelDay = $("#panel-day");
+    el.panelWeek = $("#panel-week");
+    el.dayTitle = $("#day-title");
+    el.dayPrev = $("#day-prev");
+    el.dayNext = $("#day-next");
+    el.dayToday = $("#day-today");
+    el.daySummary = $("#day-summary");
+    el.dayResumed = $("#day-resumed");
+    el.noteBox = $("#note-box");
+    el.noteInputs = Array.from(document.querySelectorAll("[data-note]"));
+    el.noteStatus = $("#note-status");
+    el.copyStatus = $("#copy-status");
+    el.copyFallback = $("#copy-fallback");
+    el.copyText = $("#copy-text");
+    el.weekTitle = $("#week-title");
+    el.weekPrev = $("#week-prev");
+    el.weekNext = $("#week-next");
+    el.weekToday = $("#week-today");
+    el.weekSummary = $("#week-summary");
+    el.chartDaily = $("#chart-daily");
+    el.legendDaily = $("#legend-daily");
+    el.dayRows = $("#day-rows");
+    el.bandsNote = $("#bands-note");
+    el.chartBands = $("#chart-bands");
+    el.legendBands = $("#legend-bands");
+    el.bandsTableBox = $("#bands-table-box");
+    el.bandsTable = $("#bands-table");
+    el.flowSection = $("#flow-section");
+    el.flowList = $("#flow-list");
+    el.weekNotesSection = $("#week-notes-section");
+    el.weekNotes = $("#week-notes");
+    el.downloadStatus = $("#download-status");
   }
 
   /** 文言だけで決まる部品を組み立てる（起動時に1回） */
@@ -984,7 +1306,7 @@
       renderClock(Date.now());
     },
     log() {
-      renderLog();
+      renderRecords();
     },
   };
 
@@ -1067,16 +1389,48 @@
     if (document.title !== title) document.title = title;
   }
 
-  function renderLog() {
-    const summary = summarizeToday(Store.state.sessions, new Date());
-    const feelings = t("feelings");
-    el.sumCount.textContent = t("countUnit", { n: summary.count });
-    el.sumTotal.textContent = formatDuration(summary.totalSeconds);
-    el.logEmpty.hidden = summary.count > 0;
-    el.clearBtn.hidden = Store.state.sessions.length === 0;
-    el.logList.textContent = "";
+  // ---- 記録（日ごと・週ごと） ----
 
-    summary.sessions.forEach((s) => {
+  /** 記録画面で見ている場所 */
+  const recordsView = { tab: "day", day: null, week: null };
+
+  function renderRecords() {
+    if (!recordsView.day) recordsView.day = todayKey();
+    if (!recordsView.week) recordsView.week = weekStartKey(recordsView.day);
+    const isDay = recordsView.tab === "day";
+    el.tabDay.setAttribute("aria-selected", String(isDay));
+    el.tabWeek.setAttribute("aria-selected", String(!isDay));
+    el.panelDay.hidden = !isDay;
+    el.panelWeek.hidden = isDay;
+    if (isDay) renderDay();
+    else renderWeek();
+    el.clearBtn.hidden = Store.state.sessions.length === 0 && Object.keys(Notes.all()).length === 0;
+  }
+
+  function renderDay() {
+    flushNotes();
+    const key = recordsView.day;
+    const today = todayKey();
+    el.dayTitle.textContent = formatDayTitle(key);
+    el.dayPrev.disabled = key <= earliestKey();
+    el.dayNext.disabled = key >= today;
+    el.dayToday.hidden = key === today;
+    const sum = summarizeDay(key);
+    el.daySummary.textContent = sum.count
+      ? t("daySummary", { count: sum.count, duration: formatDuration(sum.totalSeconds) })
+      : t("dayNoRecord");
+    el.dayResumed.hidden = !sum.resumed;
+    el.dayResumed.textContent = sum.resumed ? t("resumedLine", { n: sum.resumed }) : "";
+    renderSessionList(el.logList, sum.sessions);
+    renderNoteBox(key, true);
+    el.copyStatus.textContent = "";
+    el.copyFallback.hidden = true;
+  }
+
+  function renderSessionList(listEl, sessions) {
+    const feelings = t("feelings");
+    listEl.textContent = "";
+    sessions.forEach((s) => {
       const li = document.createElement("li");
       li.className = "log-item";
 
@@ -1115,8 +1469,336 @@
       });
 
       li.append(head, intention, meta);
-      el.logList.appendChild(li);
+      listEl.appendChild(li);
     });
+  }
+
+  // ---- 一日のふりかえり（入力が止まって少したつと自動で保存） ----
+
+  const noteTimers = {};
+
+  /** force：日を移ったときは、入力中の欄も含めて表示し直す */
+  function renderNoteBox(key, force) {
+    const note = Notes.get(key) || {};
+    el.noteInputs.forEach((input) => {
+      if (!force && document.activeElement === input) return; // 入力中の欄は上書きしない
+      input.value = note[input.dataset.note] || "";
+      input.dataset.day = key;
+    });
+    if (force) {
+      el.noteBox.open = NOTE_FIELDS.some((f) => note[f]);
+      el.noteStatus.textContent = "";
+    }
+  }
+
+  function scheduleNoteSave(input) {
+    const id = input.id;
+    clearTimeout(noteTimers[id]);
+    noteTimers[id] = setTimeout(() => saveNote(input), 600);
+  }
+
+  function saveNote(input) {
+    clearTimeout(noteTimers[input.id]);
+    delete noteTimers[input.id];
+    const key = input.dataset.day;
+    if (!key) return;
+    const before = (Notes.get(key) || {})[input.dataset.note] || "";
+    if (before === input.value.trim() || before === input.value) return;
+    Notes.set(key, input.dataset.note, input.value);
+    el.noteStatus.textContent = t("noteSaved");
+    el.clearBtn.hidden = Store.state.sessions.length === 0 && Object.keys(Notes.all()).length === 0;
+  }
+
+  /** 保存待ちのふりかえりをすぐ保存する（日を移る前・ページを離れる前） */
+  function flushNotes() {
+    if (!el.noteInputs) return;
+    el.noteInputs.forEach((input) => {
+      if (noteTimers[input.id]) saveNote(input);
+    });
+  }
+
+  // ---- 週ごと ----
+
+  function renderWeek() {
+    flushNotes();
+    const start = recordsView.week;
+    const end = addDays(start, 6);
+    const today = todayKey();
+    el.weekTitle.textContent = t("weekRange", { from: formatDateLabel(start), to: formatDateLabel(end) });
+    el.weekPrev.disabled = start <= weekStartKey(earliestKey());
+    el.weekNext.disabled = start >= weekStartKey(today);
+    el.weekToday.hidden = start === weekStartKey(today);
+
+    const sum = summarizeRange(start, end);
+    renderWeekSummary(sum);
+    renderDailyChart(start, sum);
+    renderDayRows(start, sum);
+    renderBands(end < today ? end : today);
+    renderFlow(sum);
+    renderWeekNotes(start);
+  }
+
+  function addParagraph(parent, text, className) {
+    const p = document.createElement("p");
+    if (className) p.className = className;
+    p.textContent = text;
+    parent.appendChild(p);
+    return p;
+  }
+
+  function renderWeekSummary(sum) {
+    const box = el.weekSummary;
+    box.textContent = "";
+    if (!sum.count) {
+      addParagraph(box, t("weekNoRecord"), "period-summary");
+    } else {
+      let text = t("weekSummary", { count: sum.count, duration: formatDuration(sum.totalSeconds) });
+      if (sum.resumed) text += t("weekResumed", { n: sum.resumed });
+      addParagraph(box, text, "period-summary");
+
+      const items = [1, 2, 3, 4, 5].map((lv) => t("focusItem", { level: lv, n: sum.focusCounts[lv] }));
+      let focusLine = t("focusBreakdown", { list: items.join(t("listSep")) });
+      if (sum.focusCounts.none) focusLine += t("focusUnrated", { n: sum.focusCounts.none });
+      addParagraph(box, focusLine, "summary-line");
+
+      const labels = t("feelings");
+      const feelings = CONFIG.feelings
+        .filter((k) => sum.feelingCounts[k])
+        .map((k) => t("feelingItem", { label: labels[k], n: sum.feelingCounts[k] }));
+      if (feelings.length) addParagraph(box, t("feelingBreakdown", { list: feelings.join(t("listSep")) }), "summary-line");
+    }
+    const all = summarizeAll();
+    if (all.count) addParagraph(box, t("totalSinceStart", { count: all.count, duration: formatDuration(all.totalSeconds) }), "summary-line summary-total");
+  }
+
+  // ---- グラフ（外部ライブラリなし。SVG を組み立てる） ----
+
+  const SVG_NS = "http://www.w3.org/2000/svg";
+
+  function svgEl(tag, attrs, parent) {
+    const node = document.createElementNS(SVG_NS, tag);
+    Object.keys(attrs || {}).forEach((k) => node.setAttribute(k, attrs[k]));
+    if (parent) parent.appendChild(node);
+    return node;
+  }
+
+  function levelClass(focus) {
+    return focus >= 1 && focus <= 5 ? "seg seg-f" + focus : "seg seg-none";
+  }
+
+  function renderLegend(target) {
+    target.textContent = "";
+    [1, 2, 3, 4, 5, "none"].forEach((lv) => {
+      const sw = document.createElement("span");
+      sw.className = "swatch " + (lv === "none" ? "seg-none" : "seg-f" + lv);
+      sw.setAttribute("aria-hidden", "true");
+      target.appendChild(sw);
+    });
+    const label = document.createElement("span");
+    label.textContent = t("legendFocus");
+    target.appendChild(label);
+  }
+
+  /** 日ごとの集中の時間：月〜日の縦棒。1本はその日の回を時刻順に積み上げたもの */
+  function renderDailyChart(start, sum) {
+    const W = 320;
+    const H = 200;
+    const top = 24;
+    const bottom = 26;
+    const plotH = H - top - bottom;
+    const colW = W / 7;
+    const barW = 26;
+    const today = todayKey();
+    const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
+    const minutesOf = (k) => (sum.byDay[k] || []).reduce((m, s) => m + sessionSeconds(s), 0) / 60;
+    const maxMin = Math.max(0, ...days.map(minutesOf));
+    const yMax = Math.max(60, Math.ceil(maxMin / 30) * 30);
+
+    const root = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart-svg", role: "img" });
+    const desc = [];
+    svgEl("line", { x1: 0, x2: W, y1: top + plotH, y2: top + plotH, class: "chart-axis-line" }, root);
+    const weekdays = t("weekdays");
+
+    days.forEach((k, i) => {
+      const cx = colW * i + colW / 2;
+      const future = k > today;
+      const label = svgEl("text", { x: cx, y: H - 8, "text-anchor": "middle", class: "chart-label" + (k === today ? " is-today" : "") + (future ? " is-future" : "") }, root);
+      label.textContent = weekdays[keyToDate(k).getDay()];
+      if (future) return;
+      const list = sum.byDay[k] || [];
+      const minutes = minutesOf(k);
+      desc.push(formatDateLabel(k) + " " + (list.length ? t("countUnit", { n: list.length }) + "・" + t("minutesShort", { n: Math.round(minutes) }) : t("none")));
+      if (!list.length) {
+        svgEl("line", { x1: cx - barW / 2, x2: cx + barW / 2, y1: top + plotH - 1, y2: top + plotH - 1, class: "chart-empty" }, root);
+        return;
+      }
+      let y = top + plotH;
+      list.forEach((s) => {
+        const h = (sessionSeconds(s) / 60 / yMax) * plotH;
+        if (h <= 0) return;
+        y -= h;
+        svgEl("rect", { x: cx - barW / 2, y: y, width: barW, height: Math.max(h - (h > 3 ? 1 : 0), 0.5), rx: 1.5, class: levelClass(s.focus) }, root);
+      });
+      const value = svgEl("text", { x: cx, y: Math.max(y - 6, 12), "text-anchor": "middle", class: "chart-value" }, root);
+      value.textContent = t("minutesShort", { n: Math.round(minutes) });
+    });
+
+    root.setAttribute("aria-label", t("chartDailyTitle") + "：" + desc.join("、"));
+    el.chartDaily.textContent = "";
+    el.chartDaily.appendChild(root);
+    renderLegend(el.legendDaily);
+  }
+
+  /** 日付の一覧（7行）。行を押すと、その日の「日ごと」へ */
+  function renderDayRows(start, sum) {
+    const today = todayKey();
+    el.dayRows.textContent = "";
+    for (let i = 0; i < 7; i++) {
+      const k = addDays(start, i);
+      if (k > today) break;
+      const list = sum.byDay[k] || [];
+      const li = document.createElement("li");
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "day-row";
+      b.dataset.action = "goto-day";
+      b.dataset.date = k;
+      const minutes = Math.round(list.reduce((m, s) => m + sessionSeconds(s), 0) / 60);
+      b.textContent = list.length
+        ? t("dayRow", { date: formatDateLabel(k), count: list.length, minutes })
+        : t("dayRowEmpty", { date: formatDateLabel(k) });
+      li.appendChild(b);
+      el.dayRows.appendChild(li);
+    }
+  }
+
+  /** 集中しやすい時間帯（ここ4週間）：時間帯ごとの横棒。長さは回数、中は集中度ごとの濃さ */
+  function renderBands(endKey) {
+    const r = summarizeBands(endKey);
+    const labels = t("bandLabels");
+    el.chartBands.textContent = "";
+    el.legendBands.textContent = "";
+    el.bandsTable.textContent = "";
+    el.bandsTableBox.hidden = !r.enough;
+    if (!r.enough) {
+      el.bandsNote.textContent = t("bandsNotEnough");
+      return;
+    }
+
+    // 観察の一文（分母を必ず添える。助言はしない）
+    const candidates = r.bands
+      .map((b, i) => ({ i, total: b.total, high: b.levels[4] + b.levels[5] }))
+      .filter((b) => b.total >= CONFIG.bandMinCount);
+    const maxHigh = Math.max(0, ...candidates.map((b) => b.high));
+    if (maxHigh > 0) {
+      const items = candidates
+        .filter((b) => b.high === maxHigh)
+        .slice(0, 2)
+        .map((b) => t("bandsObserveItem", { band: labels[b.i], total: b.total, high: b.high }));
+      el.bandsNote.textContent = t("bandsObserve", { bands: items.join(t("bandsObserveJoin")) });
+    } else {
+      const most = r.bands.reduce((best, b, i) => (b.total > r.bands[best].total ? i : best), 0);
+      el.bandsNote.textContent = t("bandsMost", { band: labels[most], n: r.bands[most].total });
+    }
+
+    const W = 320;
+    const rowH = 42;
+    const H = rowH * r.bands.length + 4;
+    const trackW = W - 48;
+    const maxTotal = Math.max(1, ...r.bands.map((b) => b.total));
+    const root = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart-svg", role: "img" });
+    const desc = [];
+    r.bands.forEach((b, i) => {
+      const y0 = i * rowH;
+      const few = b.total < CONFIG.bandMinCount;
+      const g = svgEl("g", { class: few ? "band-row is-few" : "band-row" }, root);
+      const label = svgEl("text", { x: 0, y: y0 + 14, class: "chart-label chart-label-start" }, g);
+      label.textContent = labels[i] + (few && b.total ? "　" + t("bandsFew") : "");
+      svgEl("rect", { x: 0, y: y0 + 20, width: trackW, height: 14, rx: 3, class: "chart-track" }, g);
+      let x = 0;
+      [1, 2, 3, 4, 5, "none"].forEach((lv) => {
+        const n = b.levels[lv];
+        if (!n) return;
+        const w = (n / maxTotal) * trackW;
+        svgEl("rect", { x, y: y0 + 20, width: Math.max(w - (w > 3 ? 1 : 0), 0.5), height: 14, class: lv === "none" ? "seg seg-none" : "seg seg-f" + lv }, g);
+        x += w;
+      });
+      const count = svgEl("text", { x: W, y: y0 + 32, "text-anchor": "end", class: "chart-value" }, g);
+      count.textContent = t("countUnit", { n: b.total });
+      desc.push(labels[i] + " " + t("countUnit", { n: b.total }));
+    });
+    root.setAttribute("aria-label", t("chartBandsTitle") + "：" + desc.join("、"));
+    el.chartBands.appendChild(root);
+    renderLegend(el.legendBands);
+
+    // 数字で見る（表）
+    const thead = document.createElement("tr");
+    [t("tableBand"), t("tableCount"), "1", "2", "3", "4", "5", t("tableUnrated")].forEach((h) => {
+      const th = document.createElement("th");
+      th.scope = "col";
+      th.textContent = h;
+      thead.appendChild(th);
+    });
+    el.bandsTable.appendChild(thead);
+    r.bands.forEach((b, i) => {
+      const tr = document.createElement("tr");
+      [labels[i], b.total, b.levels[1], b.levels[2], b.levels[3], b.levels[4], b.levels[5], b.levels.none].forEach((v, j) => {
+        const cell = document.createElement(j === 0 ? "th" : "td");
+        if (j === 0) cell.scope = "row";
+        cell.textContent = String(v);
+        tr.appendChild(cell);
+      });
+      el.bandsTable.appendChild(tr);
+    });
+  }
+
+  /** 没頭できた時間：集中度5の回を時刻順に、やることの文をそのまま */
+  function renderFlow(sum) {
+    const list = sum.sessions.filter((s) => CONFIG.flowFocusLevels.indexOf(s.focus) >= 0).slice(0, CONFIG.flowMax);
+    el.flowSection.hidden = !list.length;
+    el.flowList.textContent = "";
+    list.forEach((s) => {
+      const li = document.createElement("li");
+      const meta = document.createElement("span");
+      meta.className = "flow-meta";
+      meta.textContent = t("flowMeta", {
+        date: formatDateLabel(dateKey(s.startedAt)),
+        time: formatTimeOfDay(s.startedAt),
+        minutes: Math.round(sessionSeconds(s) / 60),
+      });
+      const text = document.createElement("span");
+      text.className = "flow-text" + (s.intention ? "" : " is-empty");
+      text.textContent = s.intention || t("noIntention");
+      li.append(meta, text);
+      el.flowList.appendChild(li);
+    });
+  }
+
+  /** この週のふりかえり：書いた日だけ、日付つきでそのまま並べる */
+  function renderWeekNotes(start) {
+    el.weekNotes.textContent = "";
+    let any = false;
+    for (let i = 0; i < 7; i++) {
+      const k = addDays(start, i);
+      const note = Notes.get(k);
+      if (!note) continue;
+      any = true;
+      const block = document.createElement("div");
+      block.className = "week-note";
+      const h = document.createElement("h4");
+      h.className = "week-note-date";
+      h.textContent = formatDateLabel(k);
+      block.appendChild(h);
+      [
+        ["good", "noteGood"],
+        ["next", "noteNext"],
+        ["moved", "copyNoteMoved"],
+      ].forEach(([f, labelKey]) => {
+        if (note[f]) addParagraph(block, t(labelKey) + "：" + note[f], "week-note-line");
+      });
+      el.weekNotes.appendChild(block);
+    }
+    el.weekNotesSection.hidden = !any;
   }
 
   // ==========================================================================
@@ -1309,10 +1991,197 @@
   }
 
   function clearAll() {
+    flushNotes();
     if (!window.confirm(t("clearConfirm"))) return;
     Store.clearSessions();
-    renderLog();
+    Notes.clear();
+    recordsView.day = todayKey();
+    recordsView.week = weekStartKey(recordsView.day);
+    renderRecords();
     el.logStatus.textContent = t("cleared");
+  }
+
+  function openRecords() {
+    recordsView.tab = "day";
+    recordsView.day = todayKey();
+    recordsView.week = weekStartKey(recordsView.day);
+    el.logStatus.textContent = "";
+    el.downloadStatus.textContent = "";
+    showView("log");
+  }
+
+  /** 日や週を動かす。未来と、いちばん古い記録より前には動かない */
+  function moveDay(delta) {
+    const today = todayKey();
+    let k = delta === 0 ? today : addDays(recordsView.day, delta);
+    if (k > today) k = today;
+    if (k < earliestKey()) k = earliestKey();
+    recordsView.day = k;
+    renderRecords();
+  }
+
+  function moveWeek(delta) {
+    const thisWeek = weekStartKey(todayKey());
+    let k = delta === 0 ? thisWeek : addDays(recordsView.week, delta * 7);
+    if (k > thisWeek) k = thisWeek;
+    const first = weekStartKey(earliestKey());
+    if (k < first) k = first;
+    recordsView.week = k;
+    renderRecords();
+  }
+
+  function setRecordsTab(tab) {
+    if (tab === recordsView.tab) return;
+    if (tab === "week") recordsView.week = weekStartKey(recordsView.day);
+    recordsView.tab = tab;
+    renderRecords();
+  }
+
+  // ---- この日をコピー（LINE などに貼れる文章） ----
+
+  function buildDayText(key) {
+    const sum = summarizeDay(key);
+    const feelings = t("feelings");
+    const lines = [t("copyHeader", { date: formatDateLabel(key) })];
+    lines.push(sum.count ? t("daySummary", { count: sum.count, duration: formatDuration(sum.totalSeconds) }) : t("dayNoRecord"));
+    sum.sessions.forEach((s) => {
+      const parts = [formatTimeOfDay(s.startedAt), s.intention || t("noIntention"), formatSessionDuration(sessionSeconds(s))];
+      if (s.status === "interrupted") parts[2] += t("copyInterrupted");
+      if (s.focus) parts.push(t("copyFocus", { n: s.focus }));
+      if (s.feeling) parts.push(feelings[s.feeling] || s.feeling);
+      lines.push(parts.join(" "));
+    });
+    if (sum.resumed) lines.push(t("resumedLine", { n: sum.resumed }));
+    const note = Notes.get(key) || {};
+    [
+      ["good", "copyNoteGood"],
+      ["next", "copyNoteNext"],
+      ["moved", "copyNoteMoved"],
+    ].forEach(([f, labelKey]) => {
+      if (note[f]) lines.push(t(labelKey) + "：" + note[f].replace(/\r?\n/g, " "));
+    });
+    return lines.join("\n");
+  }
+
+  function copyDay() {
+    flushNotes();
+    const text = buildDayText(recordsView.day);
+    const showFallback = () => {
+      el.copyFallback.hidden = false;
+      el.copyText.value = text;
+      el.copyText.focus();
+      el.copyText.select();
+      let ok = false;
+      try {
+        ok = document.execCommand("copy");
+      } catch (e) {
+        ok = false;
+      }
+      el.copyStatus.textContent = ok ? t("copied") : "";
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        () => {
+          el.copyFallback.hidden = true;
+          el.copyStatus.textContent = t("copied");
+        },
+        showFallback
+      );
+    } else {
+      showFallback();
+    }
+  }
+
+  // ---- 記録のダウンロード ----
+
+  /** CSV の1マス。文字の列は "" で囲み、数式として実行されないようにする */
+  function csvCell(value, isText) {
+    let v = value == null ? "" : String(value);
+    v = v.replace(/\r\n|\r|\n/g, "／");
+    if (!isText) return v;
+    if (/^[=+\-@\t]/.test(v)) v = "'" + v;
+    return '"' + v.replace(/"/g, '""') + '"';
+  }
+
+  function buildCsv() {
+    const feelings = t("feelings");
+    const weekdays = t("weekdays");
+    const rows = [t("csvHeaders").map((h) => csvCell(h, true)).join(",")];
+    validSessions().forEach((s) => {
+      const minutes = Math.round(sessionSeconds(s) / 6) / 10;
+      rows.push(
+        [
+          csvCell(formatDateCsv(s.startedAt)),
+          csvCell(weekdays[new Date(s.startedAt).getDay()], true),
+          csvCell(formatTimeOfDay(s.startedAt)),
+          csvCell(typeof s.endedAt === "number" ? formatTimeOfDay(s.endedAt) : ""),
+          csvCell(s.intention || "", true),
+          csvCell(s.status === "completed" ? t("statusCompleted") : t("statusInterrupted"), true),
+          csvCell(minutes),
+          csvCell(s.plannedMinutes != null ? s.plannedMinutes : ""),
+          csvCell(s.focus || ""),
+          csvCell(s.feeling ? feelings[s.feeling] || s.feeling : "", true),
+          csvCell(s.id || "", true),
+        ].join(",")
+      );
+    });
+    return "\ufeff" + rows.join("\r\n") + "\r\n";
+  }
+
+  function isoWithOffset(date) {
+    const off = -date.getTimezoneOffset();
+    const sign = off >= 0 ? "+" : "-";
+    const a = Math.abs(off);
+    return (
+      dateKey(date) + "T" + pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds()) +
+      sign + pad2(Math.floor(a / 60)) + ":" + pad2(a % 60)
+    );
+  }
+
+  function buildJson() {
+    const data = {
+      format: "coachingl-pomodoro-data",
+      formatVersion: 1,
+      exportedAt: isoWithOffset(new Date()),
+      settings: Store.state.settings,
+      sessions: validSessions(),
+      days: Notes.all(),
+    };
+    return JSON.stringify(data, null, 2);
+  }
+
+  let persistRequested = false;
+
+  function downloadFile(name, mime, text) {
+    const blob = new Blob([text], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    el.downloadStatus.textContent = t("downloaded", { name });
+    // ブラウザに「この記録は消さないで」と頼む（結果は画面に出さない）
+    if (!persistRequested && navigator.storage && navigator.storage.persist) {
+      persistRequested = true;
+      navigator.storage.persist().catch(() => {});
+    }
+  }
+
+  function fileStamp() {
+    return todayKey().replace(/-/g, "");
+  }
+
+  function downloadCsv() {
+    downloadFile("coachingl-pomodoro_sessions_" + fileStamp() + ".csv", "text/csv;charset=utf-8", buildCsv());
+  }
+
+  function downloadJson() {
+    flushNotes();
+    downloadFile("coachingl-pomodoro_data_" + fileStamp() + ".json", "application/json;charset=utf-8", buildJson());
   }
 
   function setBreakMinutes() {
@@ -1415,8 +2284,43 @@
           break;
         }
         case "open-log":
-          el.logStatus.textContent = "";
-          showView("log");
+          openRecords();
+          break;
+        case "log-tab":
+          setRecordsTab(target.dataset.tab);
+          break;
+        case "day-prev":
+          moveDay(-1);
+          break;
+        case "day-next":
+          moveDay(1);
+          break;
+        case "day-today":
+          moveDay(0);
+          break;
+        case "week-prev":
+          moveWeek(-1);
+          break;
+        case "week-next":
+          moveWeek(1);
+          break;
+        case "week-today":
+          moveWeek(0);
+          break;
+        case "goto-day":
+          recordsView.tab = "day";
+          recordsView.day = target.dataset.date;
+          renderRecords();
+          el.panelDay.scrollIntoView({ block: "start" });
+          break;
+        case "copy-day":
+          copyDay();
+          break;
+        case "download-csv":
+          downloadCsv();
+          break;
+        case "download-json":
+          downloadJson();
           break;
         case "go-start":
           goStart();
@@ -1455,6 +2359,18 @@
 
     el.breakMinutes.addEventListener("change", setBreakMinutes);
     el.keepScreen.addEventListener("change", setKeepScreen);
+    el.noteInputs.forEach((input) => {
+      input.addEventListener("input", () => {
+        el.noteStatus.textContent = "";
+        scheduleNoteSave(input);
+      });
+      input.addEventListener("blur", () => saveNote(input));
+    });
+    // ページを離れる前に、保存待ちのふりかえりを保存する
+    window.addEventListener("pagehide", flushNotes);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) flushNotes();
+    });
     el.workCustom.addEventListener("input", () => {
       el.customHint.textContent = t("customHint");
       el.customHint.classList.remove("hint-warn");
@@ -1489,13 +2405,21 @@
 
     // 別のタブで状態が変わったら追従する
     window.addEventListener("storage", (e) => {
+      if (e.key === NOTES_KEY || e.key === null) {
+        Notes.load();
+        if (currentView === "log") {
+          if (recordsView.tab === "day") renderNoteBox(recordsView.day, false);
+          else renderWeek();
+        }
+        if (e.key === NOTES_KEY) return;
+      }
       if (e.key !== STORAGE_KEY && e.key !== null) return;
       const before = JSON.stringify(Store.state.current);
       Store.load();
       applyTheme(Store.state.settings.theme);
       renderThemeSetting();
       if (JSON.stringify(Store.state.current) !== before) restore();
-      else if (currentView === "log") renderLog();
+      else if (currentView === "log") renderRecords();
     });
   }
 
@@ -1504,6 +2428,7 @@
     applyI18n(document);
     buildStaticParts();
     Store.load();
+    Notes.load();
     applyTheme(Store.state.settings.theme);
     Notify.init();
     bindEvents();
