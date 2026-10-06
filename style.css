@@ -222,6 +222,21 @@ legend.field-label {
   font-size: 0.9375rem;
 }
 
+/* 画面上部に重ねて出す案内（表示・非表示でボタンの位置が動かないように） */
+.touch-hint {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  left: 16px;
+  right: 16px;
+  z-index: 10;
+  max-width: 448px;
+  margin: 0 auto;
+  box-shadow: var(--shadow);
+  text-align: center;
+  text-wrap: balance;
+  word-break: auto-phrase;
+}
+
 .notice-muted {
   background: var(--surface-muted);
 }
