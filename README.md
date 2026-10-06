@@ -80,13 +80,14 @@ python3 -m http.server 8000
 
 更新するときは、`main` に変更を反映するだけで、自動的に公開内容も更新されます。
 
-`style.css` や `app.js` を変えたときは、`index.html` の `style.css?v=4` / `app.js?v=4` の数字を1つ上げてください。
+`style.css` や `app.js` を変えたときは、`index.html` の `style.css?v=5` / `app.js?v=5` の数字を1つ上げてください。
 GitHub Pages ではファイルがブラウザに10分ほど保存されるため、数字を上げないと、新しい `index.html` と古い `app.js` が組み合わさって表示が崩れることがあります。
 
 ## ファイル構成
 
 ```
 index.html   画面の骨組み（文言は app.js から差し込みます）
+icons/       ファビコンとホーム画面用アイコン（COACHING-L のロゴ）
 style.css    見た目（スマホ優先・ライト／ダーク対応）
 app.js       動きと文言のすべて
 SPEC.md      MVP の仕様書

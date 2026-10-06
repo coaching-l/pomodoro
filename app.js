@@ -32,6 +32,7 @@
       docTitlePaused: "{time} 一時停止中 | COACHING-L",
       docTitleBreak: "{time} 休憩 | COACHING-L",
       docTitleReview: "おつかれさまでした | COACHING-L",
+      homeScreenTitle: "ポモドーロ", // iPhone のホーム画面に追加したときの名前
 
       // スタート
       appTitle: "ポモドーロタイマー",
@@ -195,6 +196,9 @@
     });
     root.querySelectorAll("[data-i18n-aria-label]").forEach((el) => {
       el.setAttribute("aria-label", t(el.dataset.i18nAriaLabel));
+    });
+    root.querySelectorAll("[data-i18n-content]").forEach((el) => {
+      el.setAttribute("content", t(el.dataset.i18nContent));
     });
   }
 
