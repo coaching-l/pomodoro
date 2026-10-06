@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f6f4ef" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1d2322" media="(prefers-color-scheme: dark)">
+  <title>ポモドーロタイマー | COACHING-L</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='26' fill='%234a7a72'/%3E%3Ccircle cx='32' cy='32' r='12' fill='%23f6f4ef'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app">
+    <main>
+      <noscript><p class="notice">このページを使うには JavaScript を有効にしてください。</p></noscript>
+
+      <!-- 1. スタート -->
+      <section class="view" data-view="start" hidden>
+        <h1 class="app-title" tabindex="-1" data-i18n="appTitle"></h1>
+
+        <p class="notice" id="start-notice" role="status" hidden></p>
+        <p class="notice notice-muted" id="storage-notice" data-i18n="storageUnavailable" hidden></p>
+
+        <form id="start-form" class="stack" novalidate>
+          <div class="field">
+            <label for="intention" class="question" data-i18n="intentionLabel"></label>
+            <input id="intention" class="text-input" type="text" maxlength="80" autocomplete="off" enterkeyhint="go" aria-describedby="intention-hint" data-i18n-placeholder="intentionPlaceholder">
+            <p class="hint" id="intention-hint" data-i18n="intentionHint"></p>
+          </div>
+
+          <fieldset class="field">
+            <legend class="field-label" data-i18n="workLabel"></legend>
+            <div class="chips chips-4">
+              <button type="button" class="chip" data-action="select-work" data-work="10" aria-pressed="false"></button>
+              <button type="button" class="chip" data-action="select-work" data-work="15" aria-pressed="false"></button>
+              <button type="button" class="chip" data-action="select-work" data-work="25" aria-pressed="false"></button>
+              <button type="button" class="chip" data-action="select-work" data-work="custom" aria-pressed="false" data-i18n="customChip"></button>
+            </div>
+            <div class="custom-row" id="custom-row" hidden>
+              <input id="work-custom" class="number-input" type="number" min="5" max="60" step="1" inputmode="numeric" aria-describedby="custom-hint" data-i18n-aria-label="customAria">
+              <span class="unit" data-i18n="minuteUnit"></span>
+              <p class="hint" id="custom-hint" data-i18n="customHint" aria-live="polite"></p>
+            </div>
+          </fieldset>
+
+          <p class="break-summary" id="break-summary"></p>
+
+          <button type="submit" class="btn btn-primary btn-large btn-block" data-i18n="startButton"></button>
+        </form>
+
+        <div class="start-footer">
+          <button type="button" class="btn btn-secondary btn-block" data-action="open-log" data-i18n="openLog"></button>
+
+          <details class="settings">
+            <summary data-i18n="settingsTitle"></summary>
+            <div class="settings-body stack">
+              <div class="field">
+                <label for="break-minutes" class="field-label" data-i18n="breakLabel"></label>
+                <div class="custom-row">
+                  <input id="break-minutes" class="number-input" type="number" min="1" max="30" step="1" inputmode="numeric" aria-describedby="break-hint">
+                  <span class="unit" data-i18n="minuteUnit"></span>
+                  <p class="hint" id="break-hint" data-i18n="breakHint"></p>
+                </div>
+              </div>
+              <div class="field">
+                <span class="field-label" data-i18n="notifyLabel"></span>
+                <button type="button" class="btn btn-secondary" id="notify-btn" data-action="request-notify" data-i18n="notifyButton"></button>
+                <p class="hint" id="notify-status" aria-live="polite"></p>
+                <p class="hint" data-i18n="notifyNote"></p>
+              </div>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- 2. 集中中 -->
+      <section class="view view-center" data-view="focus" hidden>
+        <h2 class="visually-hidden" tabindex="-1" data-i18n="focusHeading"></h2>
+        <p class="time" id="focus-time" role="timer">00:00</p>
+        <p class="intention" id="focus-intention"></p>
+        <p class="paused-note" id="paused-note" data-i18n="pausedNote" hidden></p>
+        <div class="actions">
+          <button type="button" class="btn btn-secondary btn-block" id="pause-btn" data-action="toggle-pause"></button>
+          <button type="button" class="btn btn-ghost btn-block" data-action="stop" data-i18n="stop"></button>
+        </div>
+      </section>
+
+      <!-- 2'. やめたあと -->
+      <section class="view view-center" data-view="stopped" hidden>
+        <p class="message" tabindex="-1" data-i18n="stoppedMessage"></p>
+        <p class="sub" id="stopped-detail"></p>
+        <div class="actions">
+          <button type="button" class="btn btn-primary btn-block" data-action="go-start" data-i18n="backToStart"></button>
+        </div>
+      </section>
+
+      <!-- 3. 振り返り -->
+      <section class="view" data-view="review" hidden>
+        <h2 class="lead" tabindex="-1" data-i18n="reviewTitle"></h2>
+        <p class="recap" id="review-intention"></p>
+
+        <fieldset class="field">
+          <legend class="field-label" data-i18n="focusQuestion"></legend>
+          <div class="chips chips-5 scale">
+            <button type="button" class="chip chip-tall" data-action="select-focus" data-focus="1" aria-pressed="false">1</button>
+            <button type="button" class="chip chip-tall" data-action="select-focus" data-focus="2" aria-pressed="false">2</button>
+            <button type="button" class="chip chip-tall" data-action="select-focus" data-focus="3" aria-pressed="false">3</button>
+            <button type="button" class="chip chip-tall" data-action="select-focus" data-focus="4" aria-pressed="false">4</button>
+            <button type="button" class="chip chip-tall" data-action="select-focus" data-focus="5" aria-pressed="false">5</button>
+          </div>
+          <div class="scale-labels" aria-hidden="true">
+            <span data-i18n="focusLow"></span>
+            <span data-i18n="focusHigh"></span>
+          </div>
+        </fieldset>
+
+        <fieldset class="field">
+          <legend class="field-label" data-i18n="feelingQuestion"></legend>
+          <div class="chips chips-3" id="feeling-chips"></div>
+        </fieldset>
+
+        <p class="hint hint-center" data-i18n="reviewSkipHint"></p>
+        <button type="button" class="btn btn-primary btn-large btn-block" data-action="to-break" data-i18n="toBreak"></button>
+      </section>
+
+      <!-- 4. 休憩 -->
+      <section class="view view-center" data-view="break" hidden>
+        <h2 class="phase-label" tabindex="-1" data-i18n="breakTitle"></h2>
+        <p class="time time-break" id="break-time" role="timer">00:00</p>
+        <p class="prompt" id="break-prompt"></p>
+        <div class="actions">
+          <button type="button" class="btn btn-secondary btn-block" data-action="end-break" data-i18n="endBreak"></button>
+        </div>
+      </section>
+
+      <!-- 5. 今日の記録 -->
+      <section class="view" data-view="log" hidden>
+        <h2 class="lead" tabindex="-1" data-i18n="logTitle"></h2>
+        <div class="stats">
+          <div class="stat">
+            <span class="stat-label" data-i18n="logCount"></span>
+            <span class="stat-value" id="sum-count"></span>
+          </div>
+          <div class="stat">
+            <span class="stat-label" data-i18n="logTotal"></span>
+            <span class="stat-value" id="sum-total"></span>
+          </div>
+        </div>
+        <p class="empty" id="log-empty" data-i18n="logEmpty" hidden></p>
+        <ol class="log-list" id="log-list"></ol>
+        <p class="hint hint-center" id="log-status" role="status"></p>
+        <div class="actions">
+          <button type="button" class="btn btn-primary btn-block" data-action="go-start" data-i18n="back"></button>
+          <button type="button" class="btn btn-ghost btn-block btn-small" id="clear-btn" data-action="clear-all" data-i18n="clearAll"></button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p class="footer-brand" data-i18n="brand">COACHING-L</p>
+      <p class="footer-privacy" data-i18n="privacyNote">記録はこの端末の中だけに保存され、外部には送信されません</p>
+    </footer>
+  </div>
+</body>
+</html>
