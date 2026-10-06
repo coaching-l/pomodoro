@@ -1,52 +1,65 @@
 /* COACHING-L ポモドーロタイマー
    スマホ優先。外部フォントは使わず、端末のフォントで表示します。 */
 
+/* 色は COACHING-L のホームページ（coaching-l.net）のブランドカラーに合わせています。
+   紺 #042143 / 濃い紺 #02172f / 金 #c09e5c / 濃い金 #98783d / 背景 #f7f8fa / 文字 #293746 */
 :root {
-  --bg: #f6f4ef;
+  --bg: #f7f8fa;
   --surface: #ffffff;
-  --surface-muted: #eeebe3;
-  --text: #2e3a39;
-  --text-muted: #5f6967;
-  --accent: #4a7a72;
-  --accent-strong: #3b655e;
-  --accent-soft: #e1ebe7;
+  --surface-muted: #edf0f3;
+  --text: #293746;
+  --text-muted: #5f6d7c;
+  --heading: #042143;
+  --accent: #042143; /* 主なボタン・選んだ項目 */
+  --accent-strong: #02172f;
+  --accent-soft: #eaeef3;
   --accent-contrast: #ffffff;
-  --border: #dcd7cc;
-  --badge-done-bg: #e1ebe7;
-  --badge-done-text: #2f5a53;
-  --badge-rest-bg: #efe9dc;
-  --badge-rest-text: #6b5a3c;
-  --focus-ring: #7aa79f;
-  --warn-text: #8a5a2b;
+  --gold: #c09e5c; /* 飾りの線 */
+  --gold-text: #98783d; /* 大きな文字に使う金 */
+  --gold-soft: #faf6ec;
+  --border: #d3dae2; /* 入力欄・ボタンの枠 */
+  --line: #e0e5ea; /* 区切り線 */
+  --badge-done-bg: #e6ecf3;
+  --badge-done-text: #042143;
+  --badge-rest-bg: #faf6ec;
+  --badge-rest-text: #7a5f2c;
+  --focus-ring: #98783d;
+  --warn-text: #7a5f2c;
 
-  --radius: 18px;
-  --radius-small: 14px;
+  --radius: 14px;
+  --radius-small: 10px;
   --radius-pill: 999px;
-  --shadow: 0 1px 2px rgba(46, 58, 57, 0.05), 0 6px 20px rgba(46, 58, 57, 0.06);
-  --font: system-ui, -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN",
-    "Noto Sans JP", "Yu Gothic UI", "Meiryo", sans-serif;
+  --shadow: 0 8px 24px rgba(2, 23, 47, 0.07);
+  --font: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Noto Sans JP", "Hiragino Sans",
+    "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Yu Gothic", "Meiryo", system-ui, sans-serif;
 
   color-scheme: light dark;
 }
 
+/* ダークモードは、紺を背景にして金を差し色にする */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #1d2322;
-    --surface: #262d2c;
-    --surface-muted: #2f3736;
-    --text: #e6ebe9;
-    --text-muted: #a9b3b0;
-    --accent: #8fbfb5;
-    --accent-strong: #a9d1c8;
-    --accent-soft: #33433f;
-    --accent-contrast: #142420;
-    --border: #3d4745;
-    --badge-done-bg: #33433f;
-    --badge-done-text: #b9dcd4;
-    --badge-rest-bg: #413b30;
-    --badge-rest-text: #e2d3b4;
-    --focus-ring: #8fbfb5;
-    --warn-text: #e3bf8f;
+    --bg: #02172f;
+    --surface: #0a2945;
+    --surface-muted: #0b2440;
+    --text: #e9edf1;
+    --text-muted: #a8b4c2;
+    --heading: #f3f5f8;
+    --accent: #c09e5c;
+    --accent-strong: #d1b47a;
+    --accent-soft: #0f3152;
+    --accent-contrast: #02172f;
+    --gold: #c09e5c;
+    --gold-text: #d6bd8a;
+    --gold-soft: #2a2a24;
+    --border: #24476b;
+    --line: #1a3a5c;
+    --badge-done-bg: #133a5e;
+    --badge-done-text: #dbe5f0;
+    --badge-rest-bg: #3a3221;
+    --badge-rest-text: #e8d3a6;
+    --focus-ring: #c09e5c;
+    --warn-text: #e3c48f;
     --shadow: none;
   }
 }
@@ -171,22 +184,48 @@ main {
 
 /* ---------- 文字 ---------- */
 
+/* スタート画面の上部：ロゴ＋COACHING-L（ホームページのヘッダーと同じ組み方） */
+.brand-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-logo {
+  flex: none;
+  width: 52px;
+  height: 52px;
+}
+
+.brand-name {
+  color: var(--heading);
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.14em;
+}
+
 .app-title {
-  font-size: 0.9375rem;
-  font-weight: 600;
+  font-size: 0.8125rem;
+  font-weight: 500;
   color: var(--text-muted);
   letter-spacing: 0.08em;
 }
 
+/* 見出し：左に金の線（ホームページの見出しと同じ） */
 .lead {
-  font-size: 1.625rem;
-  font-weight: 600;
-  line-height: 1.5;
+  padding-left: 14px;
+  border-left: 4px solid var(--gold);
+  color: var(--heading);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.45;
 }
 
 .question {
+  color: var(--heading);
   font-size: 1.375rem;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.5;
 }
 
@@ -224,6 +263,9 @@ legend.field-label {
 
 /* 画面上部に重ねて出す案内（表示・非表示でボタンの位置が動かないように） */
 .touch-hint {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 600;
   position: fixed;
   top: max(12px, env(safe-area-inset-top));
   left: 16px;
@@ -304,9 +346,10 @@ legend.field-label {
   min-height: 56px;
   padding: 0 24px;
   border: 1.5px solid transparent;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-small);
   font-size: 1.0625rem;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   line-height: 1.3;
   cursor: pointer;
   touch-action: manipulation;
@@ -330,11 +373,11 @@ legend.field-label {
 .btn-secondary {
   background: var(--surface);
   border-color: var(--border);
-  color: var(--text);
+  color: var(--heading);
 }
 
 .btn-secondary:hover {
-  border-color: var(--accent);
+  border-color: var(--heading);
 }
 
 .btn-ghost {
@@ -393,7 +436,8 @@ legend.field-label {
   border-radius: var(--radius-small);
   background: var(--surface);
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--heading);
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -401,7 +445,7 @@ legend.field-label {
 }
 
 .chip:hover {
-  border-color: var(--accent);
+  border-color: var(--heading);
 }
 
 .chip[aria-pressed="true"] {
@@ -433,8 +477,9 @@ legend.field-label {
 }
 
 .settings {
-  border-radius: var(--radius-small);
-  background: var(--surface-muted);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
 }
 
 .settings summary {
@@ -499,6 +544,7 @@ legend.field-label {
 /* ---------- 集中・休憩 ---------- */
 
 .time {
+  color: var(--heading);
   font-size: clamp(4.5rem, 25vw, 7.5rem);
   font-weight: 300;
   line-height: 1;
@@ -509,7 +555,7 @@ legend.field-label {
 
 .time-break {
   font-size: clamp(3.75rem, 20vw, 6rem);
-  color: var(--accent-strong);
+  color: var(--gold-text);
 }
 
 [data-view="focus"][data-paused="true"] .time {
@@ -518,6 +564,7 @@ legend.field-label {
 
 .intention {
   max-width: 100%;
+  color: var(--heading);
   font-size: 1.25rem;
   font-weight: 500;
   line-height: 1.6;
@@ -536,13 +583,14 @@ legend.field-label {
 
 .phase-label {
   font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: var(--gold-text);
+  letter-spacing: 0.2em;
 }
 
 .prompt {
   padding: 18px 20px;
+  border-top: 3px solid var(--gold);
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: var(--shadow);
@@ -553,6 +601,7 @@ legend.field-label {
 }
 
 .message {
+  color: var(--heading);
   text-wrap: balance;
   font-size: 1.25rem;
   font-weight: 500;
@@ -596,8 +645,9 @@ legend.field-label {
 }
 
 .stat-value {
+  color: var(--heading);
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
@@ -632,7 +682,8 @@ legend.field-label {
 }
 
 .log-time {
-  font-weight: 600;
+  color: var(--heading);
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
@@ -682,12 +733,13 @@ legend.field-label {
 
 .app-footer {
   padding-top: 20px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--line);
   text-align: center;
   color: var(--text-muted);
 }
 
 .footer-brand {
+  color: var(--heading);
   font-size: 0.875rem;
   font-weight: 700;
   letter-spacing: 0.16em;

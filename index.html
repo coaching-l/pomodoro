@@ -6,16 +6,16 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#f6f4ef" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#1d2322" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f7f8fa" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#02172f" media="(prefers-color-scheme: dark)">
   <title>ポモドーロタイマー | COACHING-L</title>
   <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
   <link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-title" content="ポモドーロ" data-i18n-content="homeScreenTitle">
   <!-- ?v= は更新のたびに1つ上げる（ブラウザに古いファイルが残って、表示が崩れるのを防ぐ） -->
-  <link rel="stylesheet" href="style.css?v=5">
-  <script src="app.js?v=5" defer></script>
+  <link rel="stylesheet" href="style.css?v=6">
+  <script src="app.js?v=6" defer></script>
 </head>
 <body>
   <div class="app">
@@ -26,7 +26,13 @@
 
       <!-- 1. スタート -->
       <section class="view" data-view="start" hidden>
-        <h1 class="app-title" tabindex="-1" data-i18n="appTitle"></h1>
+        <header class="brand-header">
+          <img class="brand-logo" src="icons/logo-144.png" width="52" height="52" alt="">
+          <div>
+            <p class="brand-name" data-i18n="brand">COACHING-L</p>
+            <h1 class="app-title" tabindex="-1" data-i18n="appTitle"></h1>
+          </div>
+        </header>
 
         <p class="notice" id="start-notice" role="status" hidden></p>
         <p class="notice notice-muted" id="storage-notice" data-i18n="storageUnavailable" hidden></p>
