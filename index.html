@@ -15,7 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="ポモドーロ" data-i18n-content="homeScreenTitle">
   <!-- ?v= は更新のたびに1つ上げる（ブラウザに古いファイルが残って、表示が崩れるのを防ぐ） -->
   <link rel="stylesheet" href="style.css?v=6">
-  <script src="app.js?v=6" defer></script>
+  <!-- defer を付けない：選んだ表示（ライト／ダーク）を最初の描画より前に反映して、ちらつきを防ぐため。
+       画面の部品を使う処理は、app.js の中で DOMContentLoaded を待ってから行う -->
+  <script src="app.js?v=6"></script>
 </head>
 <body>
   <div class="app">
@@ -78,6 +80,15 @@
                   <p class="hint" id="break-hint" data-i18n="breakHint"></p>
                 </div>
               </div>
+              <fieldset class="field">
+                <legend class="field-label" data-i18n="themeLabel"></legend>
+                <div class="chips chips-3">
+                  <button type="button" class="chip" data-action="select-theme" data-theme-choice="auto" aria-pressed="false" data-i18n="themeAuto"></button>
+                  <button type="button" class="chip" data-action="select-theme" data-theme-choice="light" aria-pressed="false" data-i18n="themeLight"></button>
+                  <button type="button" class="chip" data-action="select-theme" data-theme-choice="dark" aria-pressed="false" data-i18n="themeDark"></button>
+                </div>
+                <p class="hint" data-i18n="themeHint"></p>
+              </fieldset>
               <div class="field">
                 <span class="field-label" data-i18n="screenLabel"></span>
                 <label class="toggle" id="keep-screen-row">

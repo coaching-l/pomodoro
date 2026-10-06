@@ -19,6 +19,7 @@
 4. **休憩**：休憩タイマーと、身体を休めるひとことが表示されます。時間になるか、「スタートにもどる」を押すとスタートに戻ります。
    ひとことは20種類あり、トランプを切るように順番を混ぜて出すので、20種類を一巡するまで同じ文は出ません。文は `app.js` の `breakPrompts` に書き足せます。
 5. **今日の記録**：スタート画面の「今日の記録」から、今日のセッション一覧と、合計回数・合計集中時間を見られます。
+6. **表示の切り替え**：「設定」の「表示」で、自動／ライト／ダークを選べます。「自動」はスマホやパソコンの表示設定に合わせます。
 
 ### ちょっとした仕様
 
@@ -112,7 +113,7 @@ README.md    このファイル
 ```js
 {
   version: 1,
-  settings: { workMinutes, breakMinutes, keepScreenOn },  // keepScreenOn は未設定なら端末の種類で決まる
+  settings: { workMinutes, breakMinutes, keepScreenOn, theme },  // keepScreenOn は未設定なら端末の種類で決まる。theme は "auto" | "light" | "dark"
   sessions: [{
     id, startedAt, endedAt,          // 時刻はミリ秒（epoch）
     plannedMinutes, intention,

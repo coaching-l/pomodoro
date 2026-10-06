@@ -39,9 +39,10 @@
   color-scheme: light dark;
 }
 
-/* ダークモードは、紺を背景にして金を差し色にする */
+/* ダークモードは、紺を背景にして金を差し色にする。
+   「自動」で端末がダークのときと、「ダーク」を選んだときの2か所に、同じ値を書いている（変えるときは両方そろえる） */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #02172f;
     --surface: #0a2945;
     --surface-muted: #0b2440;
@@ -68,6 +69,43 @@
     --warn-text: #e3c48f;
     --shadow: none;
   }
+}
+
+:root[data-theme="dark"] {
+  --bg: #02172f;
+  --surface: #0a2945;
+  --surface-muted: #0b2440;
+  --text: #e9edf1;
+  --text-muted: #a8b4c2;
+  --heading: #f3f5f8;
+  --accent: #c09e5c;
+  --accent-strong: #d1b47a;
+  --accent-soft: #0f3152;
+  --accent-contrast: #02172f;
+  --gold: #c09e5c;
+  --gold-text: #d6bd8a;
+  --gold-label: #d6bd8a;
+  --gold-soft: #2a2a24;
+  --border: #24476b;
+  --input-border: #557699;
+  --line: #1a3a5c;
+  --focus-halo: var(--accent-soft);
+  --badge-done-bg: #133a5e;
+  --badge-done-text: #dbe5f0;
+  --badge-rest-bg: #3a3221;
+  --badge-rest-text: #e8d3a6;
+  --focus-ring: #c09e5c;
+  --warn-text: #e3c48f;
+  --shadow: none;
+}
+
+/* アプリで選んだ表示に、入力欄やチェックボックスなどブラウザの部品の色も合わせる */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 /* ---------- 基本 ---------- */
