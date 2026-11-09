@@ -31,3 +31,8 @@ for name, notes in PRESETS.items():
     with wave.open(str(ROOT / (name + '.wav')), 'wb') as out:
         out.setparams((1, 2, RATE, 0, 'NONE', 'not compressed'))
         out.writeframes(b''.join(struct.pack('<h', round(v / peak * 18000)) for v in samples))
+
+# Gesture priming must remain silent even if play() resolves late on iOS.
+with wave.open(str(ROOT / 'silence.wav'), 'wb') as out:
+    out.setparams((1, 2, RATE, 0, 'NONE', 'not compressed'))
+    out.writeframes(b'\x00\x00' * (RATE // 4))

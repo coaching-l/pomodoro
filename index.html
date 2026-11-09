@@ -17,14 +17,18 @@
   <link rel="stylesheet" href="style.css?v=8">
   <!-- defer を付けない：選んだ表示（ライト／ダーク）を最初の描画より前に反映して、ちらつきを防ぐため。
        画面の部品を使う処理は、app.js の中で DOMContentLoaded を待ってから行う -->
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
 </head>
 <body>
   <div class="app">
     <main>
+      <div class="notice" id="alarm-controls" role="status" hidden>
+        終了時間です。音は止めるまで繰り返します。
+        <button type="button" class="btn btn-primary btn-block" data-action="stop-sound">音を止める</button>
+      </div>
       <div class="notice" id="sound-notice" role="status" hidden>
         音を再生できませんでした。端末の音量と出力先を確認して、もう一度お試しください。
-        <button type="button" class="btn btn-secondary" data-action="test-sound">音を試す</button>
+        <button type="button" class="btn btn-secondary" data-action="retry-sound">もう一度鳴らす</button>
       </div>
       <!-- 再読み込み後、画面に一度触れてもらうための案内。レイアウトをずらさないよう画面上部に重ねて出す -->
       <p class="notice touch-hint" id="touch-hint" role="status" data-i18n="touchHint" hidden></p>
@@ -86,7 +90,7 @@
                   <option value="bowl">シンギングボウル</option>
                 </select>
                 <button type="button" class="btn btn-secondary" data-action="test-sound">音を試す</button>
-                <p class="hint" id="sound-help">選ぶと試聴できます。集中と休憩の終了時に鳴ります。スマホのメディア音量と、イヤホンなどの出力先を確認してください。タイマー中はこのページを開いたままにしてください。</p>
+                <p class="hint" id="sound-help">選ぶと試聴できます。集中と休憩の終了時に、止めるまで繰り返し鳴ります。スマホのメディア音量と、イヤホンなどの出力先を確認してください。タイマー中はこのページを開いたままにしてください。</p>
               </div>
               <div class="field">
                 <label for="break-minutes" class="field-label" data-i18n="breakLabel"></label>

@@ -832,6 +832,7 @@
     let unlocked = false;
     let priming = false;
     let generation = 0;
+    let alarming = false;
 
     function configure() {
       // Supported Safari versions can use the media volume / playback route.
@@ -852,11 +853,12 @@
     }
 
     function unlock() {
-      if (unlocked || priming || !player.paused) return;
-      configure();
+      if (unlocked || priming || alarming || !player.paused) return;
+      // Never prime with an audible clip: iOS can delay resolving play().
+      player.src = "sounds/silence.wav";
+      source = "";
+      player.loop = false;
       priming = true;
-      // Prime audible playback during the gesture, rather than muted autoplay.
-      // Each bundled clip starts with 150 ms of silence; pause as play resolves.
       player.muted = false;
       const token = ++generation;
       player.play().then(() => {
@@ -874,7 +876,21 @@
       });
     }
 
-    function chime() {
+    function stop() {
+      ++generation;
+      alarming = false;
+      priming = false;
+      player.pause();
+      player.loop = false;
+      player.currentTime = 0;
+      document.getElementById("alarm-controls").hidden = true;
+      notice(false);
+    }
+
+    function chime(preview = false) {
+      if (preview && alarming) return;
+      alarming = !preview;
+      document.getElementById("alarm-controls").hidden = preview;
       const token = ++generation;
       priming = false;
       player.pause();
@@ -882,6 +898,7 @@
       player.currentTime = 0;
       player.muted = false;
       player.volume = 1;
+      player.loop = !preview;
       notice(false);
       player.play().then(() => {
         if (token !== generation) return;
@@ -895,7 +912,7 @@
       });
     }
 
-    return { unlock, chime, ready: () => unlocked };
+    return { unlock, chime, stop, preview: () => chime(true), retry: () => chime(!alarming), ready: () => unlocked };
   })();
 
   /**
@@ -2816,7 +2833,13 @@
       if (!target) return;
       switch (target.dataset.action) {
         case "test-sound":
-          Sound.chime();
+          Sound.preview();
+          break;
+        case "retry-sound":
+          Sound.retry();
+          break;
+        case "stop-sound":
+          Sound.stop();
           break;
         case "select-theme": {
           const theme = normalizeTheme(target.dataset.themeChoice);
@@ -2930,7 +2953,7 @@
       const sound = e.target.value;
       if (!Object.prototype.hasOwnProperty.call(SOUND_NAMES, sound)) return;
       Store.updateSettings({ sound });
-      Sound.chime();
+      Sound.preview();
     });
     el.breakMinutes.addEventListener("change", setBreakMinutes);
     el.keepScreen.addEventListener("change", setKeepScreen);
