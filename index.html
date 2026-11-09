@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#f7f8fa" media="(prefers-color-scheme: light)">
@@ -17,11 +17,15 @@
   <link rel="stylesheet" href="style.css?v=8">
   <!-- defer を付けない：選んだ表示（ライト／ダーク）を最初の描画より前に反映して、ちらつきを防ぐため。
        画面の部品を使う処理は、app.js の中で DOMContentLoaded を待ってから行う -->
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
 </head>
 <body>
   <div class="app">
     <main>
+      <div class="notice" id="sound-notice" role="status" hidden>
+        音を再生できませんでした。端末の音量と出力先を確認して、もう一度お試しください。
+        <button type="button" class="btn btn-secondary" data-action="test-sound">音を試す</button>
+      </div>
       <!-- 再読み込み後、画面に一度触れてもらうための案内。レイアウトをずらさないよう画面上部に重ねて出す -->
       <p class="notice touch-hint" id="touch-hint" role="status" data-i18n="touchHint" hidden></p>
       <noscript><p class="notice">このページを使うには JavaScript を有効にしてください。</p></noscript>
@@ -72,6 +76,18 @@
           <details class="settings">
             <summary data-i18n="settingsTitle"></summary>
             <div class="settings-body stack">
+              <div class="field">
+                <label for="sound-choice" class="field-label">終了時の音</label>
+                <select id="sound-choice" class="text-input" aria-describedby="sound-help">
+                  <option value="bell">やさしいベル</option>
+                  <option value="wood">木琴</option>
+                  <option value="bird">小鳥</option>
+                  <option value="water">水滴</option>
+                  <option value="bowl">シンギングボウル</option>
+                </select>
+                <button type="button" class="btn btn-secondary" data-action="test-sound">音を試す</button>
+                <p class="hint" id="sound-help">選ぶと試聴できます。集中と休憩の終了時に鳴ります。スマホのメディア音量と、イヤホンなどの出力先を確認してください。タイマー中はこのページを開いたままにしてください。</p>
+              </div>
               <div class="field">
                 <label for="break-minutes" class="field-label" data-i18n="breakLabel"></label>
                 <div class="custom-row">

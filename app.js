@@ -74,7 +74,7 @@
       notifyTestBody: "通知は届いています。タイマーが終わったときも、このようにお知らせします。",
       notifyOsHint: "届かないときは、パソコン側の設定を確認してください。Mac は「システム設定 → 通知」で、使っているブラウザ（Google Chrome など）の「通知を許可」をオンにします。Windows は「設定 → システム → 通知」です。集中モードやおやすみモード（応答不可）の間は表示されません。",
       notifyBroken: "このブラウザでは、ページから通知を出せませんでした。",
-      notifyNote: "スマートフォンやタブレットのブラウザでは、通知は届きません。このページを開いたままにしておくと、終わったときにチャイムが鳴ります。電源ボタンで画面を消したとき、別のアプリに切り替えたとき、iPhone・iPad のマナーモードのときは鳴りません。",
+      notifyNote: "スマートフォンやタブレットのブラウザでは、通知は届きません。このページを開いたままにしておくと、終わったときにチャイムが鳴ります。画面ロック中や別アプリの使用中は鳴らないことがあります。音が聞こえない場合は、設定の試聴でメディア音量と出力先を確認してください。",
       breakEndedNotice: "休憩の時間が終わりました。次の時間も、自分のペースでどうぞ",
       storageUnavailable: "この環境では記録を保存できません（タイマーは使えます）",
 
@@ -384,7 +384,7 @@
       return {
         version: SCHEMA_VERSION,
         // keepScreenOn は未設定にしておき、端末の種類で決める（keepScreenOn() を参照）
-        settings: { workMinutes: CONFIG.workMinutes, breakMinutes: CONFIG.breakMinutes },
+        settings: { workMinutes: CONFIG.workMinutes, breakMinutes: CONFIG.breakMinutes, sound: "bell" },
         sessions: [],
         current: null,
         // 休憩の促しの「山札」。remaining が空になったら切り直す
@@ -815,112 +815,87 @@
   // 5. チャイムと通知
   // ==========================================================================
 
+  const SOUND_NAMES = Object.freeze({
+    bell: "やさしいベル", wood: "木琴", bird: "小鳥",
+    water: "水滴", bowl: "シンギングボウル",
+  });
+  function selectedSound() {
+    const value = Store.state.settings.sound;
+    return Object.prototype.hasOwnProperty.call(SOUND_NAMES, value) ? value : "bell";
+  }
+
   const Sound = (function () {
-    let ctx = null;
+    // Keep one media element: iOS playback permission is tied to the element.
+    const player = new Audio();
+    player.preload = "auto";
+    let source = "";
+    let unlocked = false;
+    let priming = false;
+    let generation = 0;
 
-    function getContext() {
-      if (ctx) return ctx;
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return null;
+    function configure() {
+      // Supported Safari versions can use the media volume / playback route.
       try {
-        ctx = new AC();
-        ctx.addEventListener("statechange", () => renderTouchHint());
-      } catch (e) {
-        ctx = null;
+        if (navigator.audioSession) navigator.audioSession.type = "playback";
+      } catch (e) { /* Older browsers use their normal media playback route. */ }
+      const next = selectedSound();
+      if (source !== next) {
+        player.src = "sounds/" + next + ".wav";
+        source = next;
       }
-      return ctx;
     }
 
-    function supported() {
-      return !!(window.AudioContext || window.webkitAudioContext);
+    function notice(failed) {
+      const box = document.getElementById("sound-notice");
+      if (box) box.hidden = !failed;
+      renderTouchHint();
     }
 
-    /** チャイムをすぐ鳴らせる状態か（音を使えない環境では、待っても変わらないので true） */
-    function ready() {
-      return !supported() || (!!ctx && ctx.state === "running");
-    }
-
-    /**
-     * ユーザー操作の中で呼び、自動再生の制限を解除しておく。
-     * iPhone では画面ロックなどのあと "interrupted" になるので、"running" 以外なら再開を試みる。
-     */
     function unlock() {
-      const c = getContext();
-      if (!c || c.state === "running") return;
-      c.resume().catch(() => {});
-      // iOS Safari 向け：無音を一瞬鳴らして再生可能な状態にする
-      try {
-        const src = c.createBufferSource();
-        src.buffer = c.createBuffer(1, 1, 22050);
-        src.connect(c.destination);
-        src.start(0);
-      } catch (e) {
-        /* 何もしない */
-      }
+      if (unlocked || priming || !player.paused) return;
+      configure();
+      priming = true;
+      // Prime audible playback during the gesture, rather than muted autoplay.
+      // Each bundled clip starts with 150 ms of silence; pause as play resolves.
+      player.muted = false;
+      const token = ++generation;
+      player.play().then(() => {
+        if (token !== generation) return;
+        player.pause();
+        player.currentTime = 0;
+        player.muted = false;
+        priming = false;
+        unlocked = true;
+        renderTouchHint();
+      }).catch(() => {
+        if (token !== generation) return;
+        priming = false;
+        player.muted = false;
+      });
     }
 
-    /** やわらかい2音のチャイム（サイン波＋弱い倍音、ゆっくり減衰） */
-    function play(c) {
-      try {
-        const start = c.currentTime + 0.05;
-        const master = c.createGain();
-        master.gain.value = 0.2;
-        master.connect(c.destination);
-        const notes = [
-          { freq: 659.25, at: 0 }, // E5
-          { freq: 880.0, at: 0.32 }, // A5
-        ];
-        notes.forEach((note) => {
-          const t0 = start + note.at;
-          [
-            { mult: 1, level: 1 },
-            { mult: 2, level: 0.12 },
-          ].forEach((partial) => {
-            const osc = c.createOscillator();
-            const gain = c.createGain();
-            osc.type = "sine";
-            osc.frequency.value = note.freq * partial.mult;
-            gain.gain.setValueAtTime(0.0001, t0);
-            gain.gain.exponentialRampToValueAtTime(partial.level, t0 + 0.015);
-            gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.4);
-            osc.connect(gain);
-            gain.connect(master);
-            osc.start(t0);
-            osc.stop(t0 + 1.5);
-          });
-        });
-      } catch (e) {
-        /* 音が鳴らなくてもタイマーは続ける */
-      }
-    }
-
-    /**
-     * チャイムを鳴らす。音を出せる状態でなければ少しだけ待つ（タブに戻った直後など）。
-     * 待っても鳴らせないときは諦める。次に画面に触れたときに遅れて鳴るのを防ぐため。
-     */
     function chime() {
-      const c = getContext();
-      if (!c) return;
-      if (c.state === "running") {
-        play(c);
-        return;
-      }
-      let timer = null;
-      const onChange = () => {
-        if (c.state !== "running") return;
-        cleanup();
-        play(c);
-      };
-      const cleanup = () => {
-        c.removeEventListener("statechange", onChange);
-        clearTimeout(timer);
-      };
-      c.addEventListener("statechange", onChange);
-      timer = setTimeout(cleanup, 1500);
-      c.resume().catch(() => {});
+      const token = ++generation;
+      priming = false;
+      player.pause();
+      configure();
+      player.currentTime = 0;
+      player.muted = false;
+      player.volume = 1;
+      notice(false);
+      player.play().then(() => {
+        if (token !== generation) return;
+        unlocked = true;
+        notice(false);
+      }).catch(() => {
+        if (token !== generation) return;
+        player.pause(); // Do not queue a surprise chime for a later interaction.
+        unlocked = false;
+        notice(true);
+      });
     }
 
-    return { unlock, chime, ready };
+    return { unlock, chime, ready: () => unlocked };
   })();
 
   /**
@@ -1506,6 +1481,7 @@
   }
 
   function renderBreakSetting() {
+    document.getElementById("sound-choice").value = selectedSound();
     const n = Store.state.settings.breakMinutes;
     el.breakMinutes.value = String(n);
     el.breakSummary.textContent = t("breakSummary", { n });
@@ -2839,6 +2815,9 @@
       const target = e.target.closest("[data-action]");
       if (!target) return;
       switch (target.dataset.action) {
+        case "test-sound":
+          Sound.chime();
+          break;
         case "select-theme": {
           const theme = normalizeTheme(target.dataset.themeChoice);
           Store.updateSettings({ theme });
@@ -2947,6 +2926,12 @@
       }
     });
 
+    document.getElementById("sound-choice").addEventListener("change", (e) => {
+      const sound = e.target.value;
+      if (!Object.prototype.hasOwnProperty.call(SOUND_NAMES, sound)) return;
+      Store.updateSettings({ sound });
+      Sound.chime();
+    });
     el.breakMinutes.addEventListener("change", setBreakMinutes);
     el.keepScreen.addEventListener("change", setKeepScreen);
     el.importFile.addEventListener("change", onImportFileChosen);
@@ -3026,6 +3011,7 @@
       Store.load();
       applyTheme(Store.state.settings.theme);
       renderThemeSetting();
+      document.getElementById("sound-choice").value = selectedSound();
       if (JSON.stringify(Store.state.current) !== before) restore();
       else if (currentView === "log") renderRecords();
     });
