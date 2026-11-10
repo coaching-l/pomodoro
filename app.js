@@ -56,7 +56,7 @@
       themeLight: "ライト",
       themeDark: "ダーク",
       themeHint: "「自動」は、スマホやパソコンの表示設定（ライト／ダーク）に合わせます。",
-      breakHint: "1〜30分",
+      breakHint: "タップして、1〜30分からスクロールで選べます",
       screenLabel: "画面",
       keepScreenLabel: "タイマーの間は、画面をつけたままにする",
       keepScreenHint: "スマートフォンやタブレットでは、このページが画面に出ている間だけチャイムが鳴ります。オンにすると、タイマーの間は画面が自動で消えなくなります（電池を少し多く使います）。パソコンでオンにすると、画面オフや自動ロックも止まります。",
@@ -1383,8 +1383,13 @@
       option.textContent = t("minutes", { n });
       el.workCustom.appendChild(option);
     }
-    el.breakMinutes.min = String(CONFIG.breakMin);
-    el.breakMinutes.max = String(CONFIG.breakMax);
+    el.breakMinutes.textContent = "";
+    for (let n = CONFIG.breakMin; n <= CONFIG.breakMax; n++) {
+      const option = document.createElement("option");
+      option.value = String(n);
+      option.textContent = t("minutes", { n });
+      el.breakMinutes.appendChild(option);
+    }
 
     const labels = t("feelings");
     el.feelingChips.textContent = "";

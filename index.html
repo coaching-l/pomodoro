@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="style.css?v=9">
   <!-- defer を付けない：選んだ表示（ライト／ダーク）を最初の描画より前に反映して、ちらつきを防ぐため。
        画面の部品を使う処理は、app.js の中で DOMContentLoaded を待ってから行う -->
-  <script src="app.js?v=11"></script>
+  <script src="app.js?v=12"></script>
 </head>
 <body>
   <div class="app">
@@ -95,8 +95,7 @@
               <div class="field">
                 <label for="break-minutes" class="field-label" data-i18n="breakLabel"></label>
                 <div class="custom-row">
-                  <input id="break-minutes" class="number-input" type="number" min="1" max="30" step="1" inputmode="numeric" aria-describedby="break-hint">
-                  <span class="unit" data-i18n="minuteUnit"></span>
+                  <select id="break-minutes" class="number-input duration-select" aria-describedby="break-hint"></select>
                   <p class="hint" id="break-hint" data-i18n="breakHint"></p>
                 </div>
               </div>
