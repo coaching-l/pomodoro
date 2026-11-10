@@ -44,8 +44,8 @@
       minuteUnit: "分",
       customChip: "その他",
       customAria: "作業時間（分）",
-      customHint: "5〜60分で入力できます",
-      customInvalid: "5〜60の数字を入れてください",
+      customHint: "タップして、1〜60分からスクロールで選べます",
+      customInvalid: "1〜60分から選んでください",
       breakSummary: "休憩は {n}分（設定で変えられます）",
       startButton: "はじめる",
       openLog: "記録",
@@ -339,8 +339,8 @@
   const DEFAULTS = Object.freeze({
     workMinutes: 15,
     breakMinutes: 5,
-    workPresets: [10, 15, 25],
-    workMin: 5,
+    workPresets: [5, 10, 15, 25],
+    workMin: 1,
     workMax: 60,
     breakMin: 1,
     breakMax: 30,
@@ -1376,8 +1376,13 @@
       const n = Number(chip.dataset.work);
       if (n) chip.textContent = t("minutes", { n });
     });
-    el.workCustom.min = String(CONFIG.workMin);
-    el.workCustom.max = String(CONFIG.workMax);
+    el.workCustom.textContent = "";
+    for (let n = CONFIG.workMin; n <= CONFIG.workMax; n++) {
+      const option = document.createElement("option");
+      option.value = String(n);
+      option.textContent = t("minutes", { n });
+      el.workCustom.appendChild(option);
+    }
     el.breakMinutes.min = String(CONFIG.breakMin);
     el.breakMinutes.max = String(CONFIG.breakMax);
 
@@ -1422,7 +1427,8 @@
       const settings = Store.state.settings;
       const preset = CONFIG.workPresets.indexOf(Number(settings.workMinutes)) >= 0;
       selectedWork = preset ? Number(settings.workMinutes) : "custom";
-      if (!preset) el.workCustom.value = String(settings.workMinutes);
+      el.workCustom.value = String(settings.workMinutes);
+      if (!el.workCustom.value) el.workCustom.value = String(CONFIG.workMinutes);
       renderWorkChoice();
       renderBreakSetting();
       renderThemeSetting();
@@ -2854,7 +2860,8 @@
           if (selectedWork !== "custom") Store.updateSettings({ workMinutes: selectedWork });
           renderWorkChoice();
           if (selectedWork === "custom") {
-            if (!el.workCustom.value) el.workCustom.value = String(Store.state.settings.workMinutes);
+            el.workCustom.value = String(Store.state.settings.workMinutes);
+            if (!el.workCustom.value) el.workCustom.value = String(CONFIG.workMinutes);
             el.workCustom.focus();
           }
           break;
@@ -2983,7 +2990,7 @@
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) flushNotes();
     });
-    el.workCustom.addEventListener("input", () => {
+    el.workCustom.addEventListener("change", () => {
       el.customHint.textContent = t("customHint");
       el.customHint.classList.remove("hint-warn");
       const n = readWorkMinutes();

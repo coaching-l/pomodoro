@@ -408,6 +408,13 @@ legend.field-label {
   font-variant-numeric: tabular-nums;
 }
 
+/* Keep the native picker and disclosure arrow, including iPhone's selection UI. */
+.custom-row .duration-select {
+  width: 8em;
+  appearance: auto;
+  -webkit-appearance: auto;
+}
+
 .custom-row .unit {
   font-weight: 600;
 }

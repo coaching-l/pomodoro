@@ -14,10 +14,10 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-title" content="ポモドーロ" data-i18n-content="homeScreenTitle">
   <!-- ?v= は更新のたびに1つ上げる（ブラウザに古いファイルが残って、表示が崩れるのを防ぐ） -->
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="style.css?v=9">
   <!-- defer を付けない：選んだ表示（ライト／ダーク）を最初の描画より前に反映して、ちらつきを防ぐため。
        画面の部品を使う処理は、app.js の中で DOMContentLoaded を待ってから行う -->
-  <script src="app.js?v=10"></script>
+  <script src="app.js?v=11"></script>
 </head>
 <body>
   <div class="app">
@@ -56,15 +56,15 @@
 
           <fieldset class="field">
             <legend class="field-label" data-i18n="workLabel"></legend>
-            <div class="chips chips-4">
+            <div class="chips chips-5">
+              <button type="button" class="chip" data-action="select-work" data-work="5" aria-pressed="false"></button>
               <button type="button" class="chip" data-action="select-work" data-work="10" aria-pressed="false"></button>
               <button type="button" class="chip" data-action="select-work" data-work="15" aria-pressed="false"></button>
               <button type="button" class="chip" data-action="select-work" data-work="25" aria-pressed="false"></button>
               <button type="button" class="chip" data-action="select-work" data-work="custom" aria-pressed="false" data-i18n="customChip"></button>
             </div>
             <div class="custom-row" id="custom-row" hidden>
-              <input id="work-custom" class="number-input" type="number" min="5" max="60" step="1" inputmode="numeric" aria-describedby="custom-hint" data-i18n-aria-label="customAria">
-              <span class="unit" data-i18n="minuteUnit"></span>
+              <select id="work-custom" class="number-input duration-select" aria-describedby="custom-hint" data-i18n-aria-label="customAria"></select>
               <p class="hint" id="custom-hint" data-i18n="customHint" aria-live="polite"></p>
             </div>
           </fieldset>
